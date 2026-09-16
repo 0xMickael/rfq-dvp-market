@@ -1,0 +1,28 @@
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+
+# Go
+/backend/rfq-dvp-market-api
+/backend/rfq-dvp-market-api.exe
+/backend/coverage.out
+
+# Rust
+/market-engine/target/
+
+# Foundry
+/contracts/cache/
+/contracts/out/
+/contracts/broadcast/
+
+# Frontend
+/web/node_modules/
+/web/dist/
+*.tsbuildinfo
+
+# Fichiers locaux
+/.cache/
+*.log
+.DS_Store
+Thumbs.db

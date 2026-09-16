@@ -1,4 +1,4 @@
-# Claude Code Instructions
+# rfq-dvp-market — Claude Code Instructions
 
 @AGENTS.md
 

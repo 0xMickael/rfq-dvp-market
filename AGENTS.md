@@ -1,8 +1,8 @@
-# Atlas — Agent Instructions
+# rfq-dvp-market — Agent Instructions
 
 ## 1. Project purpose
 
-Atlas is an educational but production-inspired institutional market infrastructure for trading a tokenized security against tokenized cash.
+rfq-dvp-market is an educational but production-inspired institutional market infrastructure for trading a tokenized security against tokenized cash.
 
 The system models an RFQ-based market in which investors can buy or sell a tokenized T-Bill (`tBILL`) against a tokenized euro (`sEUR`) from several competing market makers.
 
@@ -27,7 +27,7 @@ When introducing a non-trivial mechanism, explain why it is required.
 
 # 2. Core product
 
-Atlas allows a trader to request quotes to buy or sell `tBILL`.
+rfq-dvp-market allows a trader to request quotes to buy or sell `tBILL`.
 
 Example:
 
@@ -88,7 +88,7 @@ ERC-20.
 
 It is intentionally simpler than a real tokenized fund.
 
-Do not introduce ERC-4626, ERC-7540, NAV subscriptions or asynchronous fund settlement into the initial Atlas scope.
+Do not introduce ERC-4626, ERC-7540, NAV subscriptions or asynchronous fund settlement into the initial rfq-dvp-market scope.
 
 ---
 
@@ -124,7 +124,7 @@ Market makers are initially services/bots, not human-facing applications.
 
 ## Market Operator
 
-The Atlas off-chain infrastructure.
+The rfq-dvp-market off-chain infrastructure.
 
 Mainly composed of the Go backend and Rust market engine.
 
@@ -222,7 +222,7 @@ Typical responsibilities:
 
 Rust should NOT be added merely because it is faster.
 
-The purpose of Rust in Atlas is to learn how strongly typed, explicit state management and safe concurrency can be used in a market engine.
+The purpose of Rust in rfq-dvp-market is to learn how strongly typed, explicit state management and safe concurrency can be used in a market engine.
 
 When using concepts such as:
 
@@ -503,13 +503,13 @@ Development order:
 
 Do not use Ethereum mainnet.
 
-Do not run a full Ethereum node for Atlas.
+Do not run a full Ethereum node for rfq-dvp-market.
 
 During local development, use Anvil.
 
 During the public test deployment, access Sepolia through an RPC provider.
 
-Atlas Go services are blockchain clients.
+rfq-dvp-market Go services are blockchain clients.
 
 They are not Ethereum nodes and must not attempt to reproduce Ethereum node functionality.
 
@@ -661,7 +661,7 @@ These ideas may be revisited after the core project is complete.
 
 # 21. Proposed repository structure
 
-atlas/
+rfq-dvp-market/
 contracts/
 market-engine/
 backend/
