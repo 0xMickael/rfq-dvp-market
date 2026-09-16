@@ -1,24 +1,37 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Skeleton du marché RFQ pédagogique rfq-dvp-market." />
-    <title>rfq-dvp-market — skeleton</title>
-    <style>
-      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-      body { max-width: 48rem; margin: 4rem auto; padding: 0 1.5rem; line-height: 1.6; }
-      h1 { line-height: 1.2; }
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>rfq-dvp-market — skeleton</h1>
-      <p>Marché RFQ pédagogique de tBILL contre sEUR.</p>
-      <p>Le socle technique est en préparation. Aucun trading ni settlement n'est disponible.</p>
-      <p id="frontend-status">Chargement du module TypeScript…</p>
-      <noscript>JavaScript est désactivé ; le contenu de cette page reste consultable.</noscript>
-    </main>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cotation pédagogique de tBILL contre sEUR." />
+  <title>rfq-dvp-market — cotation</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 48rem; margin: 3rem auto; padding: 0 1.5rem; line-height: 1.6; }
+    h1 { line-height: 1.2; }
+    form { display: grid; gap: 1rem; max-width: 28rem; }
+    label { display: grid; gap: .25rem; }
+    input, select, button { font: inherit; padding: .5rem; }
+    li { margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>rfq-dvp-market</h1>
+    <p>Marché RFQ pédagogique de tBILL contre sEUR.</p>
+    <p>Quotes indicatives sur inventaires simulés. Aucun actif n'est réservé ou échangé.</p>
+    <form id="quote-form">
+      <label>Je souhaite<select id="side"><option value="BUY">Acheter des tBILL</option><option value="SELL">Vendre des tBILL</option></select></label>
+      <label>Définir ma demande par<select id="unit"><option value="tBILL">Une quantité de tBILL</option><option value="sEUR">Un budget maximal en sEUR</option></select></label>
+      <label><span id="amount-label">Quantité de tBILL à acheter</span><input id="amount" type="text" inputmode="decimal" value="100" required maxlength="32" aria-describedby="amount-help" /></label>
+      <p id="amount-help">Quantité exacte de tBILL, jusqu'à six décimales. Utiliser un point décimal.</p>
+      <button type="submit">Demander les quotes</button>
+    </form>
+    <p id="frontend-status" role="status" aria-live="polite"></p>
+    <ul id="quotes" aria-label="Quotes reçues"></ul>
+    <ul id="rejections" aria-label="Refus des market makers"></ul>
+    <noscript>Activer JavaScript pour demander des quotes.</noscript>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>

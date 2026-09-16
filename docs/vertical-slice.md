@@ -1,21 +1,23 @@
-# Première vertical slice : BUY 100 tBILL
+# Première vertical slice : BUY et SELL, montants variables
 
 ## État actuel
 
-Seul le skeleton est livré. Ce document est un plan de travail futur ; aucune des opérations métier ci-dessous n'est disponible.
+La cotation frontend/Go/Rust et les contrats DvP sont livrés et testés séparément. Les scripts Foundry règlent BUY et SELL sur Anvil ; l'application ne soumet pas encore de transaction. Le prochain jalon porte sur les RFQs, leur expiry et l'acceptation/réservation atomique Rust, avant le raccord des signatures et du submitter Go. Voir [progress.md](progress.md).
 
 ## Préparer les contrats et les fixtures
 
-1. Fixer les unités, arrondis, bornes et paramètres MM décrits dans le [modèle de marché](market-model.md).
+Ces préparatifs sont réalisés côté Solidity/Cast ; la fixture reste à reprendre dans les futurs signers Go et TypeScript. Voir [settlement.md](settlement.md).
+
+1. Reprendre les unités, arrondis, bornes et paramètres MM déjà implémentés dans le [modèle de marché](market-model.md).
 2. Définir les termes exacts d'un trade signé et une fixture EIP-712 partagée entre Solidity, Go et TypeScript. Les montants attendus doivent correspondre au calcul Rust.
 3. Ajouter OpenZeppelin épinglé, `SEUR`, `TBILL` et `DvPSettlement`. Tester les permissions de mint et les invariants du DvP avec Foundry.
 4. Déployer sur une instance Anvil dédiée et vierge, financer un trader, trois MM et le compte submitter, puis préparer les allowances.
 
 ## Traverser les frontières une fois
 
-1. Le trader connecte son EOA, voit ses soldes et demande BUY 100 via Go.
+1. Le trader connecte son EOA, voit ses soldes et demande BUY ou SELL via Go, en saisissant une quantité tBILL ou un montant sEUR. BUY 100 reste un scénario de test.
 2. Go valide la forme de la demande et la transmet à Rust.
-3. Rust calcule les trois quotes à partir du même snapshot de référence et identifie le meilleur ask. Les quotes sont destinées au trader demandeur, sans réservation préalable.
+3. Rust calcule les quotes possibles des trois MM à partir du même snapshot et identifie le meilleur ask pour BUY ou bid pour SELL. Les refus sont explicites. Les quotes sont destinées au trader demandeur, sans réservation préalable.
 4. Le frontend affiche quantité, prix, montant cash, contrepartie et échéances. Le trader signe les termes exacts de la quote choisie.
 5. Go vérifie la signature ; Rust revalide les termes et accepte/réserve atomiquement si l'inventaire et le temps le permettent.
 6. Le signer MM signe les mêmes termes après la réservation. Go ne recalcule ni le cash ni le prix.
@@ -26,7 +28,8 @@ Seul le skeleton est livré. Ce document est un plan de travail futur ; aucune d
 ## Critères d'acceptation à implémenter
 
 - BUY 100 : diminution exacte du cash du trader et du tBILL du MM, augmentations symétriques chez les contreparties ; le gas est payé séparément en ETH par le submitter.
-- Meilleur ask sélectionné par Rust ; trois quotes issues d'un modèle déterministe, sans prix aléatoires.
+- SELL : flux inverses, meilleur bid et réservation du cash MM. Tester les deux sens avec saisie tBILL et cash, y compris les fractions et les refus.
+- Meilleur ask/bid sélectionné par Rust ; quotes issues d'un modèle déterministe, sans prix aléatoires.
 - Deux acceptations concurrentes de 100 pour 150 disponibles : une seule réussit. Tester aussi la consommation unique de la même quote/RFQ.
 - Acceptation à `now == quote_expires_at` refusée ; settlement à `block.timestamp == settlement_deadline` refusé.
 - Modifier montant, token, contrepartie, deadline, identifiant ou domaine invalide l'autorisation.
@@ -40,6 +43,6 @@ Les tests métier viseront les invariants et les frontières entre composants. A
 
 ## Étape suivante et reports
 
-Ajouter le flow SELL avec sélection du meilleur bid et réservation du cash MM, puis les tests symétriques. SELL termine la phase 1 ; ce n'est pas un ajout de phase 2.
+Conserver BUY et SELL ensemble à chaque jalon : cotation réseau, contrats signés, acceptation/réservation, puis settlement et affichage des résultats. Les tests de concurrence ne sont pas reportés à la phase 2.
 
-La persistance, les retries durables, le loadgen, le dashboard et le déploiement public ne font pas partie de ce premier flow BUY.
+La persistance, les retries durables, le loadgen, le dashboard et le déploiement public ne font pas partie de cette première slice.

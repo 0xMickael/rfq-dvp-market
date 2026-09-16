@@ -2,7 +2,7 @@
 
 ## Statut et portée
 
-Ces décisions traduisent le plan approuvé par l'auteur et précisent `AGENTS.md`. Le skeleton constitue le jalon actuel ; les mécanismes métier décrits attendent la première slice.
+Ces décisions traduisent le plan approuvé par l'auteur et précisent `AGENTS.md`. La cotation réseau et les contrats DvP sont livrés ; l'acceptation et l'intégration du settlement restent à construire. Le [document de reprise](progress.md) distingue les validations réalisées de la cible.
 
 Le nom canonique du projet est `rfq-dvp-market`, dans les documents, les instructions d'agents, les packages et l'interface. La crate Rust s'importe sous la forme `rfq_dvp_market_engine`, conformément aux identifiants Rust.
 
@@ -42,15 +42,19 @@ Les versions directes sont épinglées, sans obligation d'être les toutes derni
 
 La toolchain de développement Rust est alignée sur `1.98.1`, version installée et explicitement approuvée par l'auteur. Le minimum de langage du package reste `1.94` ; cela ne constitue pas une validation de toutes les versions intermédiaires.
 
-## 7. Questions à finaliser avec la slice métier
+## 7. Montants et cotation
 
-- Décimales des actifs, échelles de calcul, arrondis et bornes numériques.
-- Paramètres exacts des trois MM et tie-break déterministe des quotes à prix égal.
+Choix confirmés par l'auteur : BUY et SELL ensemble ; saisie au choix en tBILL ou en sEUR ; fractions à six décimales ; refus explicite si la demande entière est impossible. BUY 100 est un exemple, pas une limite.
+
+Conventions d'implémentation : le cash saisi est un budget maximal pour BUY et un minimum à recevoir pour SELL. Le [modèle de marché](market-model.md) fixe les arrondis, bornes, paramètres MM et le tie-break. Le domaine calcule sur un snapshot sans le modifier ; les réservations atomiques restent un jalon distinct. Aucune dépendance supplémentaire n'a été ajoutée.
+
+## 8. Questions à finaliser avec la slice métier
+
 - Durées de validité compatibles avec les confirmations wallet.
-- DTO/routes métier et encodage exact du message EIP-712, avec fixtures interlangages.
+- DTO/routes d'acceptation et intégration Go/TypeScript de la fixture EIP-712. Le message signé Solidity/Cast est fixé dans [settlement.md](settlement.md).
 
-Ces choix n'empêchent pas de construire le skeleton. Ils devront être résolus avant de coder les mécanismes concernés ; ils ne doivent pas être implicitement décidés dans quatre langages séparément.
+Ces choix devront être résolus avant de coder les mécanismes concernés ; ils ne doivent pas être implicitement décidés dans quatre langages séparément.
 
 ## Reporté
 
-SELL suit le premier flow BUY et termine la phase 1. PostgreSQL, auth, recovery, loadgen, métriques et dashboard relèvent de la phase 2 ; Sepolia, CI/CD et hébergement de la phase 3. Aucun order book, réseau de solvers, bridge, ZK, account abstraction ou fonds ERC-4626/7540 n'est ajouté.
+PostgreSQL, auth, recovery, loadgen, métriques et dashboard relèvent de la phase 2 ; Sepolia, CI/CD et hébergement de la phase 3. Aucun order book, réseau de solvers, bridge, ZK, account abstraction ou fonds ERC-4626/7540 n'est ajouté.

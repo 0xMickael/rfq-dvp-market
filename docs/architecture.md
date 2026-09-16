@@ -4,7 +4,9 @@
 
 Le skeleton expose deux serveurs indépendants : Go sur `127.0.0.1:8080` et Rust sur `127.0.0.1:8081`. Chacun répond à `GET /healthz` par `200`, avec le JSON `{"status":"ok"}`. Le routage prend aussi en charge HEAD selon les conventions HTTP ; POST est refusé. Aucune dépendance externe n'est sondée.
 
-Vite sert une page statique sur `127.0.0.1:5173`. Foundry est configuré, mais aucun contrat n'existe. Aucun appel Go vers Rust ou vers Anvil n'est encore effectué.
+Vite sert le formulaire sur `127.0.0.1:5173` et relaie `/api` vers Go. Go appelle Rust pour la cotation avec un timeout de deux secondes. Les contrats et scripts de settlement Anvil sont testés séparément, sans appel blockchain depuis Go. Voir les contrats de [cotation](quote-api.md) et de [settlement](settlement.md).
+
+`market-engine/src/domain/` calcule des quotes BUY/SELL sur un snapshot immuable : montants fixes, pricing, disponibilité et classement. Ce domaine ne dépend pas d'Axum et se teste sans réseau. L'adaptateur HTTP partage le snapshot par `Arc<Market>`, sans mutation ni Mutex. Il ne stocke pas de RFQ et ne réserve aucun actif. Voir le [jalon validé](progress.md).
 
 ## Cible de la première slice
 
@@ -24,9 +26,9 @@ Go valide la forme des requêtes, transporte les décisions Rust, construit les 
 
 ### Rust : propriétaire de l'état de marché
 
-Rust possède les configurations MM, le pricing, les RFQs, les quotes, les réservations, les trades et leurs transitions métier. Le serveur HTTP est un adaptateur ; le futur domaine sera un module indépendant d'Axum, testable sans réseau.
+À terme, Rust possède les configurations MM, le pricing, les RFQs, les quotes, les réservations, les trades et leurs transitions métier. Le serveur HTTP reste un adaptateur autour du domaine indépendant d'Axum.
 
-Le choix initial est un état en mémoire protégé par `Arc<Mutex<MarketState>>`. `Arc` partage le même état entre handlers ; le `Mutex` rend atomique une transition qui consulte puis modifie plusieurs valeurs. Les requêtes arrivent concurremment, mais deux réservations ne peuvent pas lire simultanément le même inventaire disponible puis le dépenser toutes deux.
+Pour l'acceptation future, le choix initial est un état en mémoire protégé par `Arc<Mutex<MarketState>>`. Aucun verrou n'est nécessaire pour la cotation pure actuelle. `Arc` partagera le même état entre handlers ; le `Mutex` rendra atomique une transition qui consulte puis modifie plusieurs valeurs. Deux réservations ne devront pas pouvoir dépenser le même inventaire disponible.
 
 Le verrou ne couvre que du calcul court. Aucun appel HTTP, blockchain, signature ou `await` sous verrou. Les résultats sont copiés avant de répondre. Une contention mesurée pourra justifier une évolution ; aucun actor framework, sharding ou système de channels métier n'est nécessaire au départ.
 
@@ -38,7 +40,7 @@ Go rapporte à Rust les faits observés sur la chaîne. Rust applique une transi
 
 ## Interfaces futures, sans schéma figé
 
-- Frontend vers Go : demander des quotes (wallet, sens, quantité), consulter le résultat, accepter une quote avec les termes signés, consulter un trade et son transaction hash.
+- Frontend vers Go : demander des quotes (wallet, sens, montant et unité tBILL/sEUR), consulter le résultat, accepter une quote avec les termes signés, consulter un trade et son transaction hash.
 - Go vers Rust : créer/consulter une RFQ, accepter et réserver atomiquement une quote, consulter un trade, communiquer un résultat de settlement identifiable.
 - Go vers Anvil : lire soldes/allowances, soumettre un DvP signé, consulter receipts et état de consommation du trade.
 

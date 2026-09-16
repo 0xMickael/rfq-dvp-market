@@ -1,0 +1,37 @@
+{
+  "domain": {
+    "name": "rfq-dvp-market",
+    "version": "1",
+    "chainId": 31337,
+    "verifyingContract": "0x0000000000000000000000000000000000003333"
+  },
+  "primaryType": "Trade",
+  "types": {
+    "EIP712Domain": [
+      {"name":"name","type":"string"},
+      {"name":"version","type":"string"},
+      {"name":"chainId","type":"uint256"},
+      {"name":"verifyingContract","type":"address"}
+    ],
+    "Trade": [
+      {"name":"tradeId","type":"bytes32"},
+      {"name":"buyer","type":"address"},
+      {"name":"seller","type":"address"},
+      {"name":"cashToken","type":"address"},
+      {"name":"securityToken","type":"address"},
+      {"name":"cashAmount","type":"uint256"},
+      {"name":"securityAmount","type":"uint256"},
+      {"name":"deadline","type":"uint256"}
+    ]
+  },
+  "message": {
+    "tradeId":"0x0000000000000000000000000000000000000000000000000000000000000001",
+    "buyer":"0xe05fcC23807536bEe418f142D19fa0d21BB0cfF7",
+    "seller":"0x0376AAc07Ad725E01357B1725B5ceC61aE10473c",
+    "cashToken":"0x0000000000000000000000000000000000001111",
+    "securityToken":"0x0000000000000000000000000000000000002222",
+    "cashAmount":"9804921500",
+    "securityAmount":"100000000",
+    "deadline":"2000000000"
+  }
+}

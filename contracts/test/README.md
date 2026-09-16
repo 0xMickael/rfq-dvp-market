@@ -1,5 +1,7 @@
-# Tests à venir
+﻿# Tests Solidity
 
-Aucun test Solidity n'existe encore. Un `forge build` sans source Solidity ne valide pas le DvP.
+Depuis contracts : installer les dépendances avec `./install-deps.ps1`, puis lancer `forge test -vv`.
 
-Les futurs tests Foundry couvriront atomicité, montants, contreparties, signatures, domaine EIP-712, deadline et replay. Voir les [critères de la première slice](../../docs/vertical-slice.md).
+Les tests couvrent les montants BUY/SELL, les permissions, la fixture Cast EIP-712, les signatures, le replay, la deadline et le rollback. Deux tests fuzz couvrent les montants variables et les termes altérés. Le test sur Anvil réel est `../scripts/test-settlement.ps1`.
+
+Voir [settlement.md](../../docs/settlement.md).

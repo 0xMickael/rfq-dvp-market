@@ -2,7 +2,7 @@
 
 ## État actuel
 
-Aucun état métier ni transition n'existe. Les noms ci-dessous sont un modèle de travail pour la première slice, pas des enums ou un contrat d'API déjà publiés.
+Le domaine Rust calcule des quotes à partir d'un snapshot d'inventaires, sans le modifier. Aucun état RFQ/trade ni transition d'acceptation n'existe. Les noms ci-dessous sont un modèle de travail pour la première slice, pas des enums ou un contrat d'API déjà publiés.
 
 ## RFQ et acceptation cibles
 

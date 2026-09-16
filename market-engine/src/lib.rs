@@ -1,5 +1,7 @@
-//! Adaptateur HTTP du skeleton. Le futur domaine de marché sera un module distinct,
-//! indépendant d'Axum. Aucun état métier n'est créé ici.
+//! Domaine de cotation indépendant du réseau et adaptateur HTTP de santé.
+
+pub mod domain;
+mod httpapi;
 
 use axum::{Json, Router, routing::get};
 use serde::Serialize;
@@ -10,7 +12,8 @@ struct Health {
 }
 
 pub fn router() -> Router {
-    Router::new().route("/healthz", get(health))
+    httpapi::router(domain::Market::demo().expect("configuration de démonstration valide"))
+        .route("/healthz", get(health))
 }
 
 async fn health() -> Json<Health> {

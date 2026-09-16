@@ -2,7 +2,7 @@
 
 ## État actuel
 
-Seuls les serveurs de santé et la page statique existent. Les scénarios métier suivants sont des exigences à tester pendant la première slice, pas des garanties déjà implémentées.
+Les tests Rust couvrent montants, limites numériques et inventaires du snapshot ; les tests Go couvrent les pannes du moteur. Les tests Solidity couvrent signatures, replay, deadline et rollback du DvP. L'acceptation concurrente et la récupération Go/Rust autour du settlement restent à construire. Voir le [jalon validé](progress.md) et les [limites du DvP](settlement.md).
 
 Un port occupé empêche le serveur concerné de démarrer ; aucun changement silencieux de port n'est prévu. Les health endpoints ne dépendent ni de l'autre serveur ni d'Anvil.
 

@@ -15,6 +15,8 @@
 /contracts/cache/
 /contracts/out/
 /contracts/broadcast/
+/contracts/lib/
+/contracts/deployments/*.json
 
 # Frontend
 /web/node_modules/

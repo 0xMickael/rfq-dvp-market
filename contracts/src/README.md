@@ -1,7 +1,5 @@
-# Contrats à venir
+﻿# Contrats
 
-Aucun contrat Solidity n'est implémenté dans le skeleton.
+SEUR et TBILL sont des ERC-20 à six décimales, avec mint réservé à leur propriétaire issuer. DvPSettlement vérifie deux signatures EIP-712, la deadline et le replay, puis échange les actifs atomiquement.
 
-La prochaine slice ajoutera `SEUR.sol`, `TBILL.sol` et `DvPSettlement.sol`, avec OpenZeppelin épinglé. Les deux actifs seront des ERC-20 fictifs. Le DvP vérifiera les termes signés et effectuera les deux transferts atomiquement.
-
-Voir le [modèle de confiance](../../docs/trust-model.md). Aucun proxy, fonds ERC-4626, remboursement à maturité ou bridge n'est prévu.
+Voir [settlement.md](../../docs/settlement.md) pour le protocole, les hypothèses et les validations. Aucun proxy, fonds ERC-4626 ou remboursement à maturité.

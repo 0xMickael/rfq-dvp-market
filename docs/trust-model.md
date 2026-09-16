@@ -2,7 +2,7 @@
 
 ## État actuel
 
-Le skeleton ne détient aucune clé, ne connecte aucun wallet et ne déploie aucun contrat. Ses endpoints locaux de santé ne sont pas authentifiés.
+L'application de cotation ne détient aucune clé et ne connecte aucun wallet. Les scripts Foundry de test déploient et règlent des trades sur Anvil avec son mnemonic public. Les contrats vérifient deux signatures, deadline, replay et atomicité ; leur raccord à la réservation Rust reste à construire. Voir [settlement.md](settlement.md). Les API locales ne sont pas authentifiées.
 
 ## Acteurs et pouvoirs dans la première slice
 
