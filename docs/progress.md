@@ -1,90 +1,44 @@
-# Reprise du projet
+# État du projet
 
-## Jalon 1 — domaine validé le 16 septembre 2026
+Mis à jour le 21 septembre 2026. Ce document décrit la version actuelle ; les anciens récits par jalon ont été condensés pour ne pas entretenir plusieurs états contradictoires.
 
-Le skeleton initial est dans le commit `274fbf1` (`chore: bootstrap rfq-dvp-market monorepo`). Le jalon suivant ajoute le domaine de cotation Rust. La première vertical slice complète n'est pas encore réalisée.
+## Fonctionnel
 
-### Décisions à conserver
+Le parcours local est complet : wallet → RFQ → quotes Rust → signature trader → réservation atomique → signature MM → transaction Go → DvP Anvil → résultat et soldes. BUY et SELL fonctionnent en tBILL ou sEUR, avec montants exacts à six décimales. L'auteur a confirmé le fonctionnement dans son navigateur après le raccord du settlement ; ce retour manuel ne constitue pas un test automatisé de tous les cas MetaMask.
 
-- BUY et SELL avancent ensemble ; 100 tBILL est seulement un exemple.
-- Saisie au choix : quantité exacte de tBILL ou montant de sEUR, jusqu'à six décimales.
-- Convention cash : budget maximal pour BUY, minimum à recevoir pour SELL.
-- Refus explicite si un MM ne peut pas servir toute la quote ; aucune réduction silencieuse, agrégation de MM ou partial fill.
-- Rust calcule les montants et décide du meilleur prix. Go orchestrera sans reproduire le pricing.
+Le moteur protège les inventaires contre la concurrence et les doubles acceptations. Le contrat protège les termes signés, le replay et l'atomicité. Le worker suit le résultat, conserve les transactions à réessayer et notifie Rust de manière idempotente. Pas de libération sur simple timeout ou revert.
 
-Les formules, arrondis et paramètres de démonstration sont détaillés dans [market-model.md](market-model.md).
+## Validations conservées
 
-### Code disponible
+Vérifications exécutées lors des jalons des 16–17 septembre 2026, pas relancées pour la réorganisation documentaire du 21 septembre :
 
-- [amount.rs](../market-engine/src/domain/amount.rs) : entiers à six décimales, parsing strict, bornes et affichage.
-- [pricing.rs](../market-engine/src/domain/pricing.rs) : prix de référence, skew d'inventaire, bid/ask et disponibilité sur snapshot.
-- [quote.rs](../market-engine/src/domain/quote.rs) : demandes BUY/SELL, conversions cash/tBILL, refus par MM, classement et trois configurations de démonstration.
-- [mod.rs](../market-engine/src/domain/mod.rs) : types exportés et erreurs explicites.
-- [tests/quotes.rs](../market-engine/tests/quotes.rs) : comportements et limites numériques.
-- [examples/quotes.rs](../market-engine/examples/quotes.rs) : démonstration exécutable sans réseau.
+- Rust : **39 tests**, formatage, Clippy sans warning et build. Montants/arrondis, quatre modes, deux demandes concurrentes de 100 face à 150, double acceptation, frontière exacte d'expiration, bon actif réservé, comptabilité et notifications idempotentes.
+- Go : tests, `go vet` et build. Signatures et termes altérés, réservation préalable, erreurs réseau et cinq tests du submitter : pertes de réponse avant/après inclusion, retry de notification, revert, mauvais montants d'événement et nonce signé expiré.
+- Frontend : **9 tests**, TypeScript strict et build Vite. Fixture EIP-712 commune, SELL/grands montants, validation des termes et gestion du wallet avec provider simulé.
+- Solidity : **17 tests Foundry**, dont deux fuzz à 256 cas, format/build. Signatures, deadline, replay, permissions de mint et rollback. Contrats inchangés lors du dernier raccord Go.
+- Intégration cotation et signatures : vrais processus Vite → Go → Rust, quatre modes et cas de refus ; signatures validées avec wallet logiciel.
+- Intégration settlement : `scripts/test-app-settlement.ps1`, vrais BUY/SELL Go sur Anvil temporaire, quatre modes fractionnaires, receipts, soldes exacts trader/MM, retries, nonces concurrents, allowance absente puis release après deadline. Ce test ne pilote pas le DOM/MetaMask.
 
-Le domaine est indépendant d'Axum, sans nouvelle dépendance. `Market::quote(&self, ...)` ne modifie pas le snapshot. Le champ `reserved` représente uniquement des réservations fournies en entrée ; aucun mécanisme d'acceptation ou de réservation n'est implémenté.
+Le test Foundry séparé a aussi validé un aller-retour BUY/SELL 100 avec 4 sEUR de spread et les supplies attendues. Les warnings de traces Foundry nightly n'ont pas bloqué les broadcasts. Aucun audit externe ni benchmark de charge n'est revendiqué.
 
-### Vérifications réussies
+Repères historiques : skeleton `274fbf1`, checkpoint cotation/contrats `65855d4d8fda7b3339d5476d32de8b74b6538b4d`, puis RFQs/réservations, signatures/wallet et submitter applicatif. Les changements suivants sont encore non committés au moment de cette réorganisation. Aucun commit ni push effectué dans ce travail documentaire.
 
-Sous Rust/Cargo 1.98.1 et MSVC, depuis `market-engine` :
+## Limites actuelles
 
-```powershell
-cargo test --locked --all-targets
-cargo clippy --locked --all-targets -- -D warnings
-cargo fmt --check
-cargo build --locked
-cargo run --locked --example quotes
-```
+- État Go/Rust en RAM ; pas de reprise après crash. Reset coordonné avec Anvil obligatoire après perte d'état.
+- Inventaires de démonstration et comptes publics Anvil ; pas de suivi des transferts externes, pas d'authentification des API internes ni d'isolation des clés MM.
+- Un worker, aucun remplacement de transaction ni hausse automatique du gas price ; recherches d'événements depuis le bloc 0, sans purge globale des travaux/RFQs.
+- Pas de finality publique, gestion des reorgs après validation, ERC-1271, partial fills, PostgreSQL, load generator, monitoring, dashboard ou déploiement Sepolia.
 
-Résultat : 22 tests métier et 2 tests HTTP réussis, aucun warning Clippy, format et build valides, exemple terminé avec succès. Les tests couvrent les quatre modes de saisie, les fractions, les refus, les réservations déjà présentes dans le snapshot, le déterminisme, les arrondis, les configurations invalides et les overflows. Une grille de 144 cas vérifie les bornes de conversion du mode cash.
+Les choix et le sens de la persistance sont expliqués dans [architecture.md](architecture.md). Le [guide de développement](development.md) contient les commandes de reproduction.
 
-Dans la démo, P_ref vaut 98,039215. MM2 offre le meilleur ask (98,049215), MM3 le meilleur bid (98,009215). Avec 1 000 sEUR saisis : BUY cote 10,198959 tBILL pour 999,999924 sEUR ; SELL cote 10,203123 tBILL pour 1 000,000075 sEUR.
+## Prochain objectif : portfolio GitHub
 
-Un répertoire de build séparé `.cache/stage1-rust` a permis de laisser les serveurs de l'utilisateur ouverts. Le [guide de développement](development.md) explique comment reproduire ce choix. Go, le frontend et Foundry sont inchangés et n'ont pas été retestés pour ce jalon.
+Publier une première version honnête et reproductible du prototype local. Une version publique du code n'exige pas un déploiement Internet ou Sepolia.
 
-### Limites à la fin du jalon 1
+1. Documentation simplifiée et explication pédagogique : réalisées ici. Quatre documents au lieu de treize, avec un README d'entrée. Aucun code applicatif modifié dans cette étape.
+2. Avant publication : relire le diff complet des jalons, vérifier le parcours depuis un checkout propre, choisir la licence et préparer une courte capture ou vidéo de BUY/SELL. Vérifier les fichiers destinés au dépôt public et distinguer clairement les clés Anvil de tout secret réel. Cette revue de publication n'est pas encore réalisée.
+3. Ajouter une CI minimale pour les vérifications reproductibles, puis préparer le commit et publier lorsque la version est prête. Publication encore à réaliser ; aucun commit ni push effectué lors de cette étape.
+4. Évolution pédagogique possible ensuite : provoquer des interruptions réelles, définir les données à conserver et implémenter une reprise durable. PostgreSQL est une option envisagée, pas une décision d'implémentation prise ici. Loadgen et mesures de performance peuvent suivre ; pas de priorité au dashboard.
 
-Les serveurs exposent toujours uniquement `/healthz`. Le frontend reste statique. Aucun identifiant RFQ/quote, stockage de RFQ, expiry, acceptation, verrou de réservation, wallet, signature EIP-712, contrat ou settlement n'est implémenté.
-
-La cotation vérifie seulement la capacité du MM dans un snapshot. Elle ne garantit ni la capacité au moment d'une future acceptation, ni les soldes/allowances on-chain du trader ou du MM. Les tests actuels ne prouvent pas la prévention des doubles acceptations ou du double settlement.
-
-## Jalon 2 — cotation réseau validée le 16 septembre 2026
-
-Le formulaire appelle maintenant Go, qui transmet la demande au domaine Rust. BUY/SELL et les deux unités de saisie sont disponibles. Les quotes sont indicatives, sans réservation ou transaction.
-
-Nouveaux points d'entrée :
-
-- `market-engine/src/httpapi.rs` : DTO JSON, conversion vers le domaine et réponses de cotation.
-- `backend/internal/engine/client.go` : client HTTP avec timeout de deux secondes et propagation du contexte, sans pricing Go.
-- `backend/internal/httpapi/handler.go` : validation de forme et route `/api/quotes`.
-- `web/src/main.ts` et `web/index.html` : formulaire, résultats, refus et invalidation des résultats lors d'un changement de saisie.
-- `web/vite.config.ts` : proxy local `/api` vers Go, pour dev et preview.
-- [quote-api.md](quote-api.md) : format des messages, statuts et limites.
-
-Validation réussie : 26 tests Rust (22 domaine, 4 HTTP), Clippy sans warning, build Rust ; tests Go (5 fonctions de test avec sous-scénarios), go vet et build ; TypeScript strict et build Vite. `scripts/test-quotes.ps1` a validé le trajet réel Vite → Go → Rust sur les quatre modes, les refus par MM, le refus global, la précision invalide et le moteur arrêté. Tous les processus lancés par ce script ont été arrêtés.
-
-Le navigateur pilotable n'a pas démarré (runtime Node de l'outil introuvable). L'interaction visuelle du formulaire reste à vérifier manuellement ; le build et les appels HTTP réels sont validés. Les contrats Solidity restent absents : aucun test de DvP n'est annoncé.
-
-## Jalon 3 — contrats validés le 17 septembre 2026
-
-- SEUR/TBILL : ERC-20 à six décimales, mint réservé à leur issuer.
-- DvPSettlement : paire immutable, signatures des deux contreparties, deadline exclusive, transferts atomiques, événement et statut de settlement.
-- Replay consommé par `(buyer, seller, tradeId)` pour éviter qu'un autre couple bloque un identifiant public. Le futur moteur conserve des identifiants globalement uniques.
-- Fixture EIP-712 JSON et signatures Cast validées dans Foundry ; les signers Go/TypeScript restent à construire.
-- Déploiement/financement Anvil et BUY/SELL reproductibles avec les scripts Foundry. Détail du protocole dans [settlement.md](settlement.md).
-- Formulaire clarifié : « Acheter/Vendre des tBILL », quantité ou budget maximal/cash minimum ; résultats formulés en actifs payés et reçus.
-
-Validation : 17 tests Foundry réussis, dont deux fuzz à 256 cas chacun ; format/build Foundry et build TypeScript/Vite réussis. `scripts/test-settlement.ps1` a broadcasté les déploiements et les deux trades sur Anvil vierge (port 18545), puis vérifié soldes, supplies et statuts. L'instance temporaire a été arrêtée ; les adresses JSON générées ne désignent donc pas une chaîne encore vivante. Les warnings de traces de Foundry nightly n'ont pas empêché ces validations.
-
-Le frontend précédent a été confirmé fonctionnel par l'utilisateur. Les nouveaux libellés sont compilés ; leur inspection visuelle reste manuelle. Go/Rust n'ont pas changé à ce jalon et leurs tests n'ont pas été relancés.
-
-## Prochaine étape : RFQs et réservation Rust
-
-1. Ajouter identité trader, RFQ/quote/trade IDs, expiry commerciale et deadline de settlement distinctes. Les opérations doivent conserver les montants exacts de la quote.
-2. Implémenter l'acceptation et la réservation dans une même section critique Rust, pour BUY et SELL. Tester deux demandes concurrentes de 100 face à 150 disponibles, double acceptation et frontière d'expiration.
-3. Relier le wallet et la signature trader ; vérifier la fixture EIP-712 dans Go/TypeScript. Le signer MM ne signe qu'après réservation valide.
-4. Ajouter submitter Go, receipts et notification idempotente de Rust. Ne pas libérer une réservation sur simple timeout ou revert : les signatures peuvent rester exécutables.
-5. Relier le frontend jusqu'à SETTLED, puis valider le flow complet.
-
-Les scripts Foundry ne remplacent pas le futur settlement Go. Aucun RFQ lifecycle, wallet connecté ou échange depuis le formulaire n'est encore livré. Ne pas ajouter PostgreSQL, queues durables, loadgen, dashboard ou reprise automatique. Actualiser ce document après chaque jalon validé.
+La documentation a été fusionnée : décisions/pricing/lifecycle/confiance/échecs dans `architecture.md`, lancement et tests dans `development.md`, routes et settlement signé dans `api.md`, validations et suite ici. Les liens locaux et le diff sont vérifiés lors de cette réorganisation ; les validations logicielles ci-dessus restent datées de leur exécution.

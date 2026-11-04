@@ -50,7 +50,7 @@ impl QuoteBook {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Market {
     reference_price: Amount,
-    makers: Vec<MarketMaker>,
+    pub(super) makers: Vec<MarketMaker>,
 }
 
 impl Market {

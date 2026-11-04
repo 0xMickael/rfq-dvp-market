@@ -19,7 +19,10 @@
   <main>
     <h1>rfq-dvp-market</h1>
     <p>Marché RFQ pédagogique de tBILL contre sEUR.</p>
-    <p>Quotes indicatives sur inventaires simulés. Aucun actif n'est réservé ou échangé.</p>
+    <p>Démo locale Anvil : tokens fictifs. Après votre signature, le backend peut soumettre l’échange atomique et suivre sa confirmation.</p>
+    <button id="connect" type="button">Connecter le wallet</button>
+    <p id="wallet-status" role="status">Sans wallet : cotation indicative.</p>
+    <p id="balances" role="status"></p>
     <form id="quote-form">
       <label>Je souhaite<select id="side"><option value="BUY">Acheter des tBILL</option><option value="SELL">Vendre des tBILL</option></select></label>
       <label>Définir ma demande par<select id="unit"><option value="tBILL">Une quantité de tBILL</option><option value="sEUR">Un budget maximal en sEUR</option></select></label>
@@ -30,6 +33,8 @@
     <p id="frontend-status" role="status" aria-live="polite"></p>
     <ul id="quotes" aria-label="Quotes reçues"></ul>
     <ul id="rejections" aria-label="Refus des market makers"></ul>
+    <p id="trade-status" role="status" aria-live="polite"></p>
+    <button id="retry" type="button" hidden>Reprendre l’acceptation avec la même signature</button>
     <noscript>Activer JavaScript pour demander des quotes.</noscript>
   </main>
   <script type="module" src="/src/main.ts"></script>

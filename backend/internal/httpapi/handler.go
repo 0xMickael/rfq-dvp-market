@@ -10,8 +10,13 @@ import (
 
 func NewHandler() http.Handler { return Handler(engine.NewClient("http://127.0.0.1:8081")) }
 
-func Handler(client *engine.Client) http.Handler {
+func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 	mux := http.NewServeMux()
+	var service *SigningService
+	if len(signing) != 0 {
+		service = signing[0]
+	}
+	registerRFQs(mux, service)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))

@@ -1,38 +1,45 @@
-# rfq-dvp-market
+﻿# rfq-dvp-market
 
-Infrastructure de marché pédagogique : négocier un titre fictif `tBILL` contre du cash fictif `sEUR` par RFQ, puis régler l'échange atomiquement sur Anvil.
+Marché RFQ pédagogique pour acheter ou vendre un titre fictif **tBILL** contre du cash fictif **sEUR**, avec un moteur Rust, un backend Go et un settlement atomique Solidity sur Anvil.
 
-## État actuel : cotation frontend → Go → Rust
+Le projet sert à comprendre comment une décision de marché off-chain devient un échange on-chain autorisé par les deux contreparties. Trois market makers simulés proposent des prix calculés, puis le trader choisit une quote et signe ses termes dans MetaMask.
 
-Le formulaire demande des quotes BUY et SELL à Go, qui appelle Rust. Le trader choisit « Acheter des tBILL » ou « Vendre des tBILL », puis une quantité, un budget maximal ou un cash minimum à recevoir. Les contrats ERC-20 et le DvP signé sont testés séparément sur Anvil. Le formulaire ne réserve ni ne transfère encore d'actif : RFQs stockées, wallets et intégration du settlement restent à construire.
+## Ce qui fonctionne
 
-Pour reprendre le travail, commencer par le [jalon validé et la prochaine étape](docs/progress.md).
+- BUY et SELL, en quantité exacte de tBILL ou en budget maximal / cash minimum sEUR, avec six décimales.
+- Quotes identifiées et expirables, classement du meilleur prix et réservations atomiques dans Rust.
+- Signatures EIP-712 trader/MM, transaction envoyée par Go, vérification du receipt et comptabilité idempotente.
+- Interface affichant compte, soldes, résultat et transaction hash ; parcours local confirmé par l'auteur.
+- Tests de concurrence, expiration, replay, transferts atomiques et réponses perdues ; scénario réel BUY/SELL sur Anvil.
 
-`GET /healthz` indique seulement que le processus HTTP répond. Il ne vérifie aucune dépendance et ne signifie pas que le marché est disponible. Le [contrat HTTP de cotation](docs/quote-api.md) décrit les messages et les erreurs.
+```mermaid
+flowchart LR
+    W[Frontend et MetaMask] -->|RFQ et signature trader| G[Go : API et settlement]
+    G -->|Quotes et réservations| R[Rust : marché et inventaires]
+    G -->|Transaction signée| A[Anvil : sEUR, tBILL et DvP]
+    A -->|Receipt et événement| G
+    G -->|Résultat vérifié| R
+```
 
-## Monorepo
+## Lire et lancer
 
-- `backend/` : API Go ; orchestration et settlement à venir.
-- `market-engine/` : domaine de cotation Rust indépendant du réseau et adaptateur HTTP.
-- `contracts/` : ERC-20, DvP EIP-712, tests et scripts Anvil ; voir [settlement.md](docs/settlement.md).
-- `web/` : Vite et TypeScript strict, sans framework UI.
-- `loadgen/` : intention documentée, réalisation en phase 2.
-- `docs/` : architecture, décisions et chemin vers la première slice.
+1. [Lancer la démo et les tests](docs/development.md) : prérequis, commandes PowerShell et MetaMask.
+2. [Comprendre le projet](docs/architecture.md) : exemple de trade, rôles Go/Rust/Solidity, pricing, sécurité et persistance.
+3. [État et prochaines étapes](docs/progress.md) : validations datées, limites et objectif portfolio.
+4. [Référence API et signatures](docs/api.md) : à consulter pour travailler sur le code, sans lecture préalable obligatoire.
 
-Chaque composant utilise son outil natif. Il n'y a pas d'orchestrateur de monorepo ni de dépendance à Docker, WSL ou Make.
+## Parcourir le code
 
-## Démarrer et vérifier
+- `market-engine/src/domain/` : montants exacts, pricing, RFQs et transitions sous verrou.
+- `backend/internal/httpapi/` : routes et vérification avant réservation.
+- `backend/internal/signing/` : termes EIP-712 et signatures des MM de démonstration.
+- `backend/internal/settlement/` : transactions, nonces, receipts et notification à Rust.
+- `contracts/src/` : tokens et contrat DvP ; `contracts/test/` : tests Foundry.
+- `web/src/` : interface TypeScript, wallet et vérification des termes.
+- `scripts/` : tests intégrés reproductibles ; `loadgen/` reste une intention, pas un outil livré.
 
-Suivre le [guide Windows natif](docs/development.md) pour les prérequis, versions, commandes et limites de validation. La première installation des dépendances Rust et npm nécessite un accès réseau.
+## Portée et portfolio
 
-## Comprendre le projet
+L'objectif est un dépôt public GitHub permettant de comprendre, exécuter et discuter le projet. Le travail porte sur la cohérence de l'inventaire, la frontière entre signature et transaction, et les échecs aux frontières entre services. L'implémentation est assistée par IA ; l'objectif de l'auteur est d'en comprendre et défendre les choix.
 
-1. [Architecture et responsabilités](docs/architecture.md)
-2. [Décisions et ambiguïtés du cadrage](docs/decisions.md)
-3. [Modèle de marché](docs/market-model.md)
-4. [Lifecycle](docs/trade-lifecycle.md)
-5. [Modèle de confiance](docs/trust-model.md)
-6. [Échecs et récupération](docs/failure-model.md)
-7. [Première vertical slice](docs/vertical-slice.md)
-
-`AGENTS.md` reste le cadrage canonique. Les décisions confirmées qui précisent ce cadrage sont consignées dans `docs/decisions.md`. BUY et SELL avancent ensemble, avec des montants variables ; 100 tBILL est un exemple de test.
+Cette version est une **démo locale**, pas une infrastructure de production : tokens sans valeur réelle, comptes Anvil publics, API internes de confiance et état Go/Rust en mémoire. Un redémarrage avec perte d'état exige une réinitialisation coordonnée. Pas de base de données, reprise durable, load generator, métriques, CI ou déploiement Sepolia livrés. Publier le code sur GitHub n'exige pas de rendre ces API accessibles sur Internet.

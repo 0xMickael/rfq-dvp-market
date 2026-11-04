@@ -1,27 +1,76 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
+	"rfq-dvp-market.local/backend/internal/engine"
 	"rfq-dvp-market.local/backend/internal/httpapi"
+	"rfq-dvp-market.local/backend/internal/settlement"
+	"rfq-dvp-market.local/backend/internal/signing"
 )
 
 func main() {
+	deployment := flag.String("deployment", "", "JSON de déploiement Anvil ; active les signers MM publics de démonstration")
+	rpcURL := flag.String("rpc", "", "RPC Anvil local ; active la soumission et le suivi du settlement")
+	address := flag.String("listen", "127.0.0.1:8080", "Adresse HTTP locale")
+	engineURL := flag.String("engine", "http://127.0.0.1:8081", "URL du moteur Rust")
+	flag.Parse()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	client := engine.NewClient(*engineURL)
+	var signer *httpapi.SigningService
+	if *deployment != "" {
+		raw, err := os.ReadFile(*deployment)
+		var config signing.Config
+		if err == nil {
+			err = json.Unmarshal(raw, &config)
+		}
+		if err == nil {
+			signer, err = httpapi.NewSigningService(client, config)
+		}
+		if err == nil && *rpcURL != "" {
+			startup, cancel := context.WithTimeout(ctx, 10*time.Second)
+			signer.Settlement, err = settlement.New(startup, *rpcURL, config, client)
+			cancel()
+			if err == nil {
+				defer signer.Settlement.Close()
+				go signer.Settlement.Run(ctx)
+			}
+		}
+		if err != nil {
+			slog.Error("configuration de signature invalide", "error", err)
+			os.Exit(1)
+		}
+	}
+	if *rpcURL != "" && signer == nil {
+		slog.Error("-rpc exige -deployment")
+		os.Exit(1)
+	}
 	server := &http.Server{
-		Addr:              "127.0.0.1:8080",
-		Handler:           httpapi.NewHandler(),
+		Addr:              *address,
+		Handler:           httpapi.Handler(client, signer),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 	}
+	go func() {
+		<-ctx.Done()
+		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutdown)
+	}()
 
 	slog.Info("démarrage de l'API rfq-dvp-market", "address", server.Addr)
-	if err := server.ListenAndServe(); err != nil {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("arrêt du serveur HTTP", "error", err)
 		os.Exit(1)
 	}

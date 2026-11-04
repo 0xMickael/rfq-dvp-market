@@ -1,6 +1,9 @@
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8081").await?;
+    let listener = tokio::net::TcpListener::bind(
+        std::env::var("ENGINE_ADDR").unwrap_or_else(|_| "127.0.0.1:8081".into()),
+    )
+    .await?;
     eprintln!(
         "rfq-dvp-market market engine : http://{}",
         listener.local_addr()?

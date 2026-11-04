@@ -1,10 +1,14 @@
-//! Cotation pure sur un snapshot : aucun réseau, aucune réservation ni exécution.
+//! Cotation pure et moteur de réservation en mémoire, indépendants du réseau.
 
 mod amount;
+mod engine;
 mod pricing;
 mod quote;
 
 pub use amount::{Amount, SCALE};
+pub use engine::{
+    Engine, EngineError, IdentifiedQuote, Rfq, RfqStatus, Timing, Trade, TradeStatus,
+};
 pub use pricing::{Inventory, MarketMaker, Prices, ReferenceMarket};
 pub use quote::{Market, Quote, QuoteBook, QuoteRequest, RequestAmount, Side};
 

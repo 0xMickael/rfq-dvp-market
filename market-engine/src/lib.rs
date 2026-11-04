@@ -1,7 +1,8 @@
-//! Domaine de cotation indépendant du réseau et adaptateur HTTP de santé.
+//! Domaine de marché indépendant du réseau et adaptateurs HTTP locaux.
 
 pub mod domain;
 mod httpapi;
+mod rfqapi;
 
 use axum::{Json, Router, routing::get};
 use serde::Serialize;
@@ -12,7 +13,26 @@ struct Health {
 }
 
 pub fn router() -> Router {
-    httpapi::router(domain::Market::demo().expect("configuration de démonstration valide"))
+    let engine = domain::Engine::new(
+        domain::Market::demo().expect("configuration de démonstration valide"),
+        domain::Timing {
+            quote_seconds: 120,
+            settlement_seconds: 600,
+        },
+        || {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("horloge Unix disponible")
+                .as_secs()
+        },
+    )
+    .expect("échéances de démonstration valides");
+    router_with_engine(std::sync::Arc::new(engine))
+}
+
+pub fn router_with_engine(engine: std::sync::Arc<domain::Engine>) -> Router {
+    httpapi::router(engine.clone())
+        .merge(rfqapi::router(engine))
         .route("/healthz", get(health))
 }
 
@@ -46,7 +66,7 @@ mod tests {
     async fn unsupported_routes_are_rejected() {
         for (method, path, expected) in [
             ("POST", "/healthz", StatusCode::METHOD_NOT_ALLOWED),
-            ("GET", "/rfqs", StatusCode::NOT_FOUND),
+            ("GET", "/rfqs", StatusCode::METHOD_NOT_ALLOWED),
         ] {
             let response = router()
                 .oneshot(

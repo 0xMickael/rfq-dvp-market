@@ -27,11 +27,15 @@ func NewClient(url string) *Client {
 }
 
 func (c *Client) Quote(ctx context.Context, input Request) (int, []byte, error) {
+	return c.Call(ctx, http.MethodPost, "/quotes", input)
+}
+
+func (c *Client) Call(ctx context.Context, method, path string, input any) (int, []byte, error) {
 	body, err := json.Marshal(input)
 	if err != nil {
 		return 0, nil, err
 	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.URL+"/quotes", bytes.NewReader(body))
+	request, err := http.NewRequestWithContext(ctx, method, c.URL+path, bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -50,7 +54,7 @@ func (c *Client) Quote(ctx context.Context, input Request) (int, []byte, error) 
 		return 0, nil, fmt.Errorf("réponse moteur invalide")
 	}
 	switch response.StatusCode {
-	case http.StatusOK, http.StatusBadRequest, http.StatusUnprocessableEntity:
+	case 200, 201, 400, 403, 404, 409, 410, 422:
 		return response.StatusCode, data, nil
 	default:
 		return 0, nil, fmt.Errorf("statut moteur inattendu : %d", response.StatusCode)

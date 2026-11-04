@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use crate::domain::{
-    MakerRejection, Market, MarketError, QuoteRequest, RejectionReason, RequestAmount, Side,
+    Engine, EngineError, MakerRejection, MarketError, QuoteRequest, RejectionReason, RequestAmount,
+    Side,
 };
 use axum::{
     Json, Router,
@@ -12,11 +13,11 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-pub fn router(market: Market) -> Router {
+pub fn router(engine: Arc<Engine>) -> Router {
     Router::new()
         .route("/quotes", post(quotes))
         .layer(DefaultBodyLimit::max(4096))
-        .with_state(Arc::new(market))
+        .with_state(engine)
 }
 
 #[derive(Deserialize)]
@@ -27,14 +28,14 @@ struct Request {
     amount: String,
 }
 #[derive(Deserialize)]
-enum Direction {
+pub(super) enum Direction {
     #[serde(rename = "BUY")]
     Buy,
     #[serde(rename = "SELL")]
     Sell,
 }
 #[derive(Deserialize)]
-enum Unit {
+pub(super) enum Unit {
     #[serde(rename = "tBILL")]
     Tbill,
     #[serde(rename = "sEUR")]
@@ -42,7 +43,7 @@ enum Unit {
 }
 
 #[derive(Serialize)]
-struct Quote {
+pub(super) struct Quote {
     maker_id: String,
     side: &'static str,
     unit_price: String,
@@ -50,7 +51,7 @@ struct Quote {
     cash_amount: String,
 }
 #[derive(Serialize)]
-struct Rejection {
+pub(super) struct Rejection {
     maker_id: String,
     code: &'static str,
     message: String,
@@ -67,7 +68,7 @@ struct Error {
     rejections: Vec<Rejection>,
 }
 
-fn rejections(items: Vec<MakerRejection>) -> Vec<Rejection> {
+pub(super) fn rejections(items: Vec<MakerRejection>) -> Vec<Rejection> {
     items.into_iter().map(|item| {
         let (code, message) = match item.reason {
             RejectionReason::BelowMinimumAmount => ("BELOW_MINIMUM_AMOUNT", "Montant arrondi à zéro.".to_owned()),
@@ -78,7 +79,7 @@ fn rejections(items: Vec<MakerRejection>) -> Vec<Rejection> {
     }).collect()
 }
 
-fn error(
+pub(super) fn error(
     status: StatusCode,
     code: &'static str,
     message: String,
@@ -96,7 +97,7 @@ fn error(
 }
 
 async fn quotes(
-    State(market): State<Arc<Market>>,
+    State(market): State<Arc<Engine>>,
     payload: Result<Json<Request>, JsonRejection>,
 ) -> Response {
     let request =
@@ -129,36 +130,39 @@ async fn quotes(
         Unit::Tbill => RequestAmount::Tbill(amount),
         Unit::Cash => RequestAmount::Cash(amount),
     };
-    match market.quote(QuoteRequest { side, amount }) {
+    match market.indicative_quote(QuoteRequest { side, amount }) {
         Ok(book) => Json(Book {
-            quotes: book
-                .quotes
-                .into_iter()
-                .map(|q| Quote {
-                    maker_id: q.maker_id,
-                    side: match q.side {
-                        Side::Buy => "BUY",
-                        Side::Sell => "SELL",
-                    },
-                    unit_price: q.unit_price.to_string(),
-                    quantity_tbill: q.quantity_tbill.to_string(),
-                    cash_amount: q.cash_amount.to_string(),
-                })
-                .collect(),
+            quotes: book.quotes.into_iter().map(Quote::from).collect(),
             rejections: rejections(book.rejections),
         })
         .into_response(),
-        Err(MarketError::NoExecutableQuote(items)) => error(
+        Err(EngineError::Market(MarketError::NoExecutableQuote(items))) => error(
             StatusCode::UNPROCESSABLE_ENTITY,
             "NO_EXECUTABLE_QUOTE",
             "Aucun MM ne peut servir la demande entière.".into(),
             items,
         ),
-        Err(err) => error(
+        Err(EngineError::Market(err)) => error(
             StatusCode::BAD_REQUEST,
             "INVALID_AMOUNT",
             err.to_string(),
             vec![],
         ),
+        Err(err) => crate::rfqapi::engine_error(err),
+    }
+}
+
+impl From<crate::domain::Quote> for Quote {
+    fn from(q: crate::domain::Quote) -> Self {
+        Self {
+            maker_id: q.maker_id,
+            side: match q.side {
+                Side::Buy => "BUY",
+                Side::Sell => "SELL",
+            },
+            unit_price: q.unit_price.to_string(),
+            quantity_tbill: q.quantity_tbill.to_string(),
+            cash_amount: q.cash_amount.to_string(),
+        }
     }
 }
