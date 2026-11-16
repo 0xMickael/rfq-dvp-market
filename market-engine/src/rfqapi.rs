@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 pub fn router(engine: Arc<Engine>) -> Router {
     Router::new()
+        .route("/market", get(market))
         .route("/rfqs", post(create))
         .route("/rfqs/{rfq_id}", get(read))
         .route("/rfqs/{rfq_id}/accept", post(accept))
@@ -291,4 +292,50 @@ async fn settlement(
         Ok(t) => Json(Trade::from(t)).into_response(),
         Err(e) => engine_error(e),
     }
+}
+
+#[derive(Serialize)]
+struct MakerView {
+    id: String,
+    bid: String,
+    ask: String,
+    tbill: String,
+    cash: String,
+    reserved_tbill: String,
+    reserved_cash: String,
+    available_tbill: String,
+    available_cash: String,
+}
+#[derive(Serialize)]
+struct MarketView {
+    reference_price: String,
+    makers: Vec<MakerView>,
+}
+async fn market(State(engine): State<Arc<Engine>>) -> Response {
+    let snapshot = match engine.market_snapshot() {
+        Ok(v) => v,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    let mut makers = Vec::new();
+    for m in snapshot.makers() {
+        let (Ok(p), Ok(a)) = (m.prices(snapshot.reference_price()), m.available()) else {
+            return StatusCode::SERVICE_UNAVAILABLE.into_response();
+        };
+        makers.push(MakerView {
+            id: m.id.clone(),
+            bid: p.bid.to_string(),
+            ask: p.ask.to_string(),
+            tbill: m.inventory.tbill.to_string(),
+            cash: m.inventory.cash.to_string(),
+            reserved_tbill: m.reserved.tbill.to_string(),
+            reserved_cash: m.reserved.cash.to_string(),
+            available_tbill: a.tbill.to_string(),
+            available_cash: a.cash.to_string(),
+        });
+    }
+    Json(MarketView {
+        reference_price: snapshot.reference_price().to_string(),
+        makers,
+    })
+    .into_response()
 }

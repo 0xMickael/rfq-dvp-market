@@ -11,7 +11,7 @@ const side = document.querySelector<HTMLSelectElement>('#side')!;
 const unit = document.querySelector<HTMLSelectElement>('#unit')!;
 const amount = document.querySelector<HTMLInputElement>('#amount')!;
 const status = document.querySelector<HTMLParagraphElement>('#frontend-status')!;
-const quotes = document.querySelector<HTMLUListElement>('#quotes')!;
+const quotes = document.querySelector<HTMLTableSectionElement>('#quotes')!;
 const rejections = document.querySelector<HTMLUListElement>('#rejections')!;
 const help = document.querySelector<HTMLParagraphElement>('#amount-help')!;
 const amountLabel = document.querySelector<HTMLSpanElement>('#amount-label')!;
@@ -46,8 +46,10 @@ async function pollSettlement() {
   polling = true;
   try {
     const result = await api<Settlement>(`/api/settlements/${trackedTrade}`);
+    tradeStatus.dataset.state = result.status;
     tradeStatus.textContent = `${result.status} — ${result.message}${result.transaction_hash ? ` Transaction : ${result.transaction_hash}` : ''}`;
     if (result.status === 'SETTLED' || result.status === 'SETTLEMENT_FAILED') {
+      void refreshMarket();
       trackedTrade = ''; sessionStorage.removeItem('settlement-trade');
       await refreshBalances(); refreshExpiry();
     }
@@ -151,6 +153,7 @@ async function resume() {
     tradeStatus.textContent = 'Vérification de la signature, réservation puis signature MM…';
     const result = await api<{ status: string; settlement_submitted: boolean; settlement?: Settlement; typed_data: TypedTrade; buyer_signature: string; seller_signature: string }>(`/api/rfqs/${saved.rfq.rfq_id}/accept`, { quote_id: saved.quote.quote_id, trade_id: saved.quote.trade_id, signature: saved.signature });
     if (result.settlement) {
+      void refreshMarket();
       if (result.settlement.trade_id !== saved.quote.trade_id) throw new Error('Identifiant de settlement inattendu.');
       if (result.typed_data) {
         if (digest({ ...result.typed_data, types: saved.data.types }) !== digest(saved.data)) throw new Error('Termes retournés différents de ceux signés.');
@@ -187,6 +190,7 @@ async function accept(rfq: Rfq, quote: Quote) {
     const prepared = await api<{ typed_data: TypedTrade }>(`/api/rfqs/${rfq.rfq_id}/quotes/${quote.quote_id}/terms`);
     if (digest({ ...prepared.typed_data, types: expected.types }) !== digest(expected)) throw new Error('Termes serveur différents de la quote affichée.');
     if (generation !== epoch) throw new Error('Wallet ou demande modifié.');
+    tradeStatus.dataset.state = 'SIGNING';
     tradeStatus.textContent = settlementEnabled ? 'Confirmer les termes dans MetaMask. Go soumettra ensuite le settlement sur Anvil.' : 'Confirmer les termes EIP-712 dans le wallet. Submitter Go désactivé.';
     const signer = await new BrowserProvider(injected).getSigner(rfq.trader_id);
     const signature = await signer.signTypedData(expected.domain, expected.types, expected.message);
@@ -211,13 +215,18 @@ form.addEventListener('submit', async event => {
     activeRfq = result.rfq_id ? result : undefined;
     status.textContent = activeRfq ? 'RFQ reçue.' : 'Quotes indicatives reçues, sans réservation. Connecter le wallet pour signer.';
     for (const [index, quote] of result.quotes.entries()) {
-      const item = document.createElement('li');
+      const item = document.createElement('tr');
+      item.className = index === 0 ? 'best' : '';
       const flow = buying ? `Vous recevez ${quote.quantity_tbill} tBILL et payez ${quote.cash_amount} sEUR` : `Vous vendez ${quote.quantity_tbill} tBILL et recevez ${quote.cash_amount} sEUR`;
-      item.textContent = `${quote.maker_id}${index === 0 ? ' — Meilleure quote' : ''} : ${flow} (prix unitaire ${quote.unit_price} sEUR/tBILL). `;
+      item.title = flow;
+      for (const value of [quote.maker_id + (index === 0 ? ' · Meilleure' : ''), quote.unit_price, quote.quantity_tbill, quote.cash_amount]) {
+        const cell = document.createElement('td'); cell.textContent = value; item.append(cell);
+      }
+      const action = document.createElement('td'); item.append(action);
       if (activeRfq) {
         const rfq = activeRfq;
         const button = document.createElement('button'); button.type = 'button'; button.textContent = settlementEnabled ? 'Signer et exécuter' : 'Signer et réserver';
-        button.addEventListener('click', () => { void accept(rfq, quote); }); item.append(button);
+        button.addEventListener('click', () => { void accept(rfq, quote); }); action.append(button);
       }
       quotes.append(item);
     }
@@ -225,3 +234,27 @@ form.addEventListener('submit', async event => {
   } catch (error) { if (generation === epoch) { status.textContent = String(error); if (error instanceof APIError) showRejections(error.rejections); } }
   finally { lock(false); }
 });
+
+type Maker = { id: string; bid: string; ask: string; tbill: string; cash: string; reserved_tbill: string; reserved_cash: string; available_tbill: string; available_cash: string };
+let marketBusy = false;
+async function refreshMarket() {
+ if (marketBusy) return; marketBusy = true;
+ const message = document.querySelector<HTMLElement>('#market-status')!;
+ const container = document.querySelector<HTMLElement>('#makers')!;
+ try {
+  const market = await api<{reference_price: string; makers: Maker[]}>('/api/market');
+  const cards = market.makers.map(m => {
+   const card = document.createElement('article'); card.className = 'maker';
+   const title = document.createElement('h3'); title.textContent = m.id; card.append(title);
+   const list = document.createElement('dl');
+   for (const [label, value] of [['Bid / Ask', m.bid + ' / ' + m.ask], ['Stock tBILL', m.tbill], ['Cash sEUR', m.cash], ['Réservé tBILL / sEUR', m.reserved_tbill + ' / ' + m.reserved_cash], ['Disponible tBILL / sEUR', m.available_tbill + ' / ' + m.available_cash]]) {
+    const dt = document.createElement('dt'); dt.textContent = label; const dd = document.createElement('dd'); dd.textContent = value; list.append(dt, dd);
+   }
+   card.append(list); return card;
+  });
+  container.replaceChildren(...cards);
+  message.textContent = 'Référence : ' + market.reference_price + ' sEUR/tBILL · Actualisé à ' + new Date().toLocaleTimeString();
+ } catch { container.replaceChildren(); message.textContent = 'Marché indisponible — nouvelle tentative automatique.'; }
+ finally { marketBusy = false; }
+}
+void refreshMarket(); setInterval(() => { void refreshMarket(); }, 3000);

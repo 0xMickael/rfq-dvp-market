@@ -74,6 +74,10 @@ impl Market {
         })
     }
 
+    pub fn makers(&self) -> &[MarketMaker] {
+        &self.makers
+    }
+
     pub fn reference_price(&self) -> Amount {
         self.reference_price
     }

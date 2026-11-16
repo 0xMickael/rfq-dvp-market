@@ -17,6 +17,18 @@ func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 		service = signing[0]
 	}
 	registerRFQs(mux, service)
+	mux.HandleFunc("GET /api/market", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		status, body, err := client.Call(r.Context(), "GET", "/market", nil)
+		if err != nil {
+			w.WriteHeader(503)
+			_ = json.NewEncoder(w).Encode(map[string]string{"message": "Marche indisponible"})
+			return
+		}
+		w.WriteHeader(status)
+		_, _ = w.Write(body)
+	})
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))

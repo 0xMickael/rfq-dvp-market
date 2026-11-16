@@ -144,6 +144,11 @@ impl Engine {
         state.last_now
     }
 
+    pub fn market_snapshot(&self) -> Result<Market, EngineError> {
+        let state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Ok(state.market.clone())
+    }
+
     pub fn indicative_quote(&self, request: QuoteRequest) -> Result<super::QuoteBook, EngineError> {
         let state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
         Ok(state.market.quote(request)?)

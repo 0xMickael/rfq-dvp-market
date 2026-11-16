@@ -50,6 +50,22 @@ mod tests {
     use tower::ServiceExt;
 
     #[tokio::test]
+    async fn market_exposes_exact_read_only_snapshot() {
+        let response = router()
+            .oneshot(Request::get("/market").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 16384).await.unwrap();
+        let text = String::from_utf8(body.to_vec()).unwrap();
+        assert!(text.contains(r#""available_tbill":"1000.000000""#));
+        assert!(text.contains(r#""reserved_tbill":"0.000000""#));
+        for id in ["MM1", "MM2", "MM3"] {
+            assert!(text.contains(id));
+        }
+    }
+
+    #[tokio::test]
     async fn health_reports_process_liveness() {
         let response = router()
             .oneshot(Request::get("/healthz").body(Body::empty()).unwrap())
