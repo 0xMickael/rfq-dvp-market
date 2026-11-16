@@ -41,6 +41,7 @@ contract DeployLocal is Script {
         vm.serializeAddress("deployment", "submitter", vm.addr(vm.deriveKey(MNEMONIC, 5)));
         string memory json = vm.serializeUint("deployment", "chainId", block.chainid);
         vm.createDir("deployments", true);
-        vm.writeJson(json, "deployments/31337.json");
+        // Les tests utilisent un manifeste distinct de la session interactive.
+        vm.writeJson(json, vm.envOr("DEPLOYMENT_FILE", string("deployments/31337.json")));
     }
 }

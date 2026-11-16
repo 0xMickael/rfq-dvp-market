@@ -1,0 +1,85 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+      - name: Read pinned toolchains
+        id: versions
+        run: |
+          $versions = Get-Content scripts/toolchains.json -Raw | ConvertFrom-Json
+          foreach ($name in @('go','rust','node','npm','foundry')) {
+            "$name=$($versions.$name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: ${{ steps.versions.outputs.go }}
+          cache: false
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+          package-manager-cache: false
+      - name: Prepare Rust
+        run: |
+          rustup toolchain install ${{ steps.versions.outputs.rust }} --profile minimal --component rustfmt --component clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1, resolved 2026-11-15
+        with:
+          version: v${{ steps.versions.outputs.foundry }}
+          cache: false
+      - name: Install dependencies on the disposable runner
+        run: |
+          npm.cmd install --global npm@${{ steps.versions.outputs.npm }} --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm.cmd ci --prefix web --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./contracts/install-deps.ps1
+      - name: Run the same checks as locally
+        run: ./scripts/verify.ps1
+      - name: Retain diagnostic logs only
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-verification-logs
+          path: |
+            .cache/verification/**/*.log
+            .cache/verification/**/summary.json
+            .cache/integration/**/*.log
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
+  go-race:
+    # This validates Go under Linux, not the Windows integration scripts.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache: false
+      - name: Race detector
+        working-directory: backend
+        run: go test -race -count=1 ./...

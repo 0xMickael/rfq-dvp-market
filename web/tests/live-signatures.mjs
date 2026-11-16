@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { Wallet } from 'ethers';
 import { typedTrade, digest, verifySignatures } from '../.test-dist/terms.js';
 
-const base = 'http://127.0.0.1:5173';
+const base = process.env.TEST_API_URL ?? 'http://127.0.0.1:5173';
 const trader = new Wallet('0x' + 'a11ce'.padStart(64, '0'));
 async function api(path, body) {
   const response = await fetch(base + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(5000) });
