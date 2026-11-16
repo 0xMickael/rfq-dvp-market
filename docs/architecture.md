@@ -116,3 +116,18 @@ Pour un portfolio, cette limite peut être annoncée dès une première publicat
 5. [Tests de réservation](../market-engine/tests/reservations.rs), [pannes du submitter](../backend/internal/settlement/manager_test.go) et [scénario Anvil](../web/tests/live-settlement.mjs).
 
 Le schéma signé exact et les routes sont regroupés dans [api.md](api.md). Les décisions de portée restent simples : Anvil avant Sepolia, BUY/SELL ensemble, entiers exacts, full fills, EIP-712 dès le prototype, état en mémoire pour cette version. Pas d'order book, multi-chain, bridges, ZK, account abstraction ou complexité quantitative ajoutés à cette démo.
+
+## Scénarios de panne reproductibles
+
+La commande scripts/verify.ps1 exécute les tests ci-dessous. Les tests RPC simulés ne démontrent pas une reprise après crash.
+
+| Déclencheur | Comportement et invariant | Récupération | Test |
+|---|---|---|---|
+| Deux acceptations dépassent le stock | Une seule réserve ; disponible positif ou nul | Nouvelle RFQ pour le perdant | Rust reservations : concurrent_requests_cannot_reserve_200_against_150_in_either_asset ; intégration Signatures |
+| Double acceptation | Un seul trade et une seule réservation | Retry de la même acceptation | Rust concurrent_double_acceptance_and_sibling_quote_are_rejected ; intégrations |
+| Acceptation à expiration exacte | Refus dès now >= expires_at | Nouvelle RFQ | Rust exact_expiry_is_exclusive_and_time_never_releases_reservations ; Foundry testDeadlineBoundary pour la deadline on-chain |
+| Réponse RPC perdue | Réservation conservée ; mêmes octets et nonce | Lecture de la chaîne puis retry sûr | Go TestLostRPCResponseAndRustNotificationKeepSameTransaction et TestLostResponseAfterInclusionDoesNotResubmit : RPC simulé |
+| Notification répétée | Pas de double comptabilisation | Répéter la notification identique | Rust settlement_is_atomic_and_idempotent_for_both_sides ; intégration Settlement sur vrais processus |
+| Allowance absente | Aucun transfert, réservation conservée avant deadline | Résolution après preuve on-chain de deadline dépassée | Intégration Settlement ; snapshot final identique au snapshot avant échec |
+
+Les avertissements du linter Foundry sont visibles : les transferFrom au nom des contreparties sont autorisés par leurs signatures ; block.timestamp définit volontairement la deadline ; l’événement après transfert est protégé par nonReentrant et le rollback transactionnel. Le warning de lecture de chain ID concerne le test de changement de domaine. Ces justifications ne constituent pas un audit externe.

@@ -1,4 +1,4 @@
-﻿# Lancer et tester
+# Lancer et tester
 
 ## Prérequis et première installation
 
@@ -6,8 +6,8 @@ Le parcours vérifié est Windows natif / PowerShell, sans Docker ni WSL. Chaque
 
 - Go : cible `1.26.8`, langage minimum `1.26.0` dans `backend/go.mod`.
 - Rust : `1.98.1` dans `rust-toolchain.toml`, avec rustfmt, Clippy et linker MSVC (Visual Studio Build Tools, workload C++ et Windows SDK). Langage minimum du package : `1.94`.
-- Node : contrainte `^20.19.0 || >=22.12.0` dans `web/package.json`. Environnement testé : Node `20.20.2`, npm `11.17.0`.
-- Foundry : Forge/Anvil `1.6.0-nightly`, commit `a0b89547df41c2ac5c28eb795ec1685927b461c1` lors des validations. Solidity `0.8.30`, EVM `cancun`.
+- Node : contrainte `^20.19.0 || >=22.12.0` dans `web/package.json`. Environnement testé : Node `24.22.1`, npm `11.19.1`.
+- Foundry : Forge/Anvil `1.9.0`. Solidity `0.8.30`, EVM `cancun`.
 
 Depuis la racine, une fois par nouveau checkout :
 
@@ -16,13 +16,41 @@ Push-Location contracts
 ./install-deps.ps1
 Pop-Location
 Push-Location web
-npm ci --ignore-scripts
+npm.cmd ci --ignore-scripts
 Pop-Location
 ```
 
 `npm ci` installe les bibliothèques du frontend, pas les tokens ni le wallet. Inutile de le répéter à chaque lancement. Le script Foundry installe OpenZeppelin 5.4.0 et forge-std 1.9.7 à des commits épinglés, sans sous-module. Go et Cargo téléchargent leurs dépendances au premier build ; conserver `go.sum`, `Cargo.lock` et `package-lock.json`. Forge peut télécharger solc. Aucune installation globale de toolchain n'est automatisée par le dépôt.
 
-## Démo complète : quatre terminaux
+## Démo complète : un terminal
+
+Depuis la racine du dépôt, avec les prérequis et dépendances installés :
+
+```powershell
+.\scripts\demo.ps1
+```
+
+Le script recharge le PATH enregistré pour retrouver les outils installés depuis l'ouverture de VS Code, sans modifier le PATH permanent. Il vérifie les dépendances et les ports 8545/8081/8080/5173, compile les composants, lance une chaîne Anvil vierge, déploie les contrats et démarre Rust, Go et le frontend. Il vérifie aussi une cotation via le proxy frontend avant d'afficher `DEMO PRETE`.
+
+Ouvrir **http://127.0.0.1:5173**, puis suivre l'essai MetaMask ci-dessous. Le compte déjà importé reste utilisable. Fermer les anciens onglets de démo pour ne pas conserver le suivi d'un trade de la session précédente.
+
+Garder le terminal ouvert ; **Ctrl+C** arrête les quatre processus lancés par le script, dans l'ordre inverse du démarrage. Un échec au démarrage ou la sortie d'un service provoque également leur arrêt. Le script refuse un port occupé ou une deuxième session et ne tue aucun service préexistant. Ne pas fermer brutalement le processus PowerShell : son bloc de nettoyage ne pourrait alors pas s'exécuter.
+
+Les logs stdout/stderr de chaque service sont conservés dans `.cache/demo/<session>/`. Le fichier de déploiement antérieur est restauré à l'arrêt ; il ne représente pas une chaîne encore active. Chaque relancement réinitialise les soldes et inventaires, sans restaurer les trades précédents. Le script de déploiement, Go et le frontend imposent Anvil 31337 ; les contrats eux-mêmes ne sont pas limités à ce réseau.
+
+Le frontend sert le build via Vite preview : les modifications de source demandent un relancement. Pour développer avec hot reload, utiliser le parcours manuel ci-dessous. Aucun outil global ni dépendance manquante n'est installé automatiquement.
+
+Pour une vérification bornée du démarrage et du nettoyage, `./scripts/demo.ps1 -RunSeconds 2` arrête la session deux secondes après qu'elle est prête. Ce contrôle ne signe aucun trade et ne remplace pas le test de settlement.
+
+Validation du lanceur le 15 novembre 2026 : démarrage complet avec cotation via le frontend, arrêt borné, refus d'un port occupé sans arrêt du listener existant, nettoyage après échec de déploiement, relancement et Ctrl+C avec vérification des quatre ports libérés. Le parcours MetaMask avait été confirmé manuellement par l'auteur avant l'ajout du lanceur ; il n'a pas été automatisé ici.
+
+Si PowerShell refuse l'exécution du script local, cette invocation autorise uniquement le processus lancé, sans changer la politique permanente :
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1
+```
+
+## Alternative : quatre terminaux
 
 Chaque terminal commence à la racine du dépôt. Garder les serveurs ouverts.
 
@@ -78,6 +106,20 @@ Sans `-rpc`, Go propose les signatures et réservations sans transfert. Sans `-d
 Ctrl+C arrête chaque serveur. Vite recharge le frontend ; Go/Rust doivent être relancés après modification. Une perte d'état Go ou Rust exige un **reset coordonné** : arrêter les services et Anvil, recréer une chaîne vierge, redéployer et relancer. Ne pas conserver la chaîne avec un inventaire Rust remis à son état initial. Si l'interface suit un ancien trade, fermer son onglet puis en ouvrir un nouveau (suivi dans `sessionStorage`). Voir [pourquoi la persistance manque](architecture.md#persistance-et-reprise).
 
 ## Vérifications reproductibles
+
+Commande recommandée depuis la racine :
+
+```powershell
+.\scripts\verify.ps1
+```
+
+Versions exactes : scripts/toolchains.json. Le script ne fait aucune installation globale. Il contrôle formatage, tests, analyses et builds puis exécute les intégrations Signatures et Settlement via Vite. L'option -SkipIntegration ne valide qu'une suite partielle.
+
+Rapports : .cache/verification/<exécution>/summary.json et verify.log. Logs et manifestes isolés : .cache/integration/. Ports de test : 15173, 18080, 18081, 18545. Les tests refusent les ports occupés, arrêtent leurs seuls processus et ne remplacent pas le manifeste de démo.
+
+Le workflow GitHub prépare Windows 2022 avec les mêmes versions et un job Ubuntu 24.04 limité au race detector Go. Actions épinglées par SHA, permissions en lecture seule, aucun secret applicatif. Les installations globales du workflow concernent uniquement le runner jetable. L'exécution GitHub reste à valider après push autorisé.
+
+### Commandes individuelles
 
 Exécuter chaque bloc depuis la racine et vérifier le succès des commandes avant de poursuivre.
 

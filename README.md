@@ -23,6 +23,14 @@ flowchart LR
 
 ## Lire et lancer
 
+Depuis PowerShell, après installation des [prérequis et dépendances](docs/development.md) :
+
+```powershell
+.\scripts\demo.ps1
+```
+
+Un seul terminal compile et lance Anvil, déploie les contrats, puis démarre Rust, Go et le frontend. Ouvre **http://127.0.0.1:5173**, connecte ton compte MetaMask de test et signe un trade. **Ctrl+C** arrête les services. Chaque lancement recrée une session avec les soldes initiaux ; les logs sont dans `.cache/demo/`.
+
 1. [Lancer la démo et les tests](docs/development.md) : prérequis, commandes PowerShell et MetaMask.
 2. [Comprendre le projet](docs/architecture.md) : exemple de trade, rôles Go/Rust/Solidity, pricing, sécurité et persistance.
 3. [État et prochaines étapes](docs/progress.md) : validations datées, limites et objectif portfolio.

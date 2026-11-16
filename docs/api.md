@@ -83,3 +83,7 @@ Les deux contreparties signent le même digest. Go refuse les signatures EOA mal
 La fixture [buy-100.typed-data.json](../contracts/fixtures/buy-100.typed-data.json) et ses [signatures Cast](../contracts/fixtures/buy-100.signatures.json) fixent un BUY 100 pour 9 804,921500 sEUR : `100000000` atomes de tBILL contre `9804921500` atomes de sEUR. Adresses et clés fictives de test ; les tests Go, TypeScript et Foundry confrontent leurs encodeurs. L'ABI utilisée par Go est [dvp.json](../backend/internal/settlement/dvp.json).
 
 Les primitives proviennent d'OpenZeppelin et de go-ethereum/ethers, pas d'une cryptographie maison. Les versions sont fixées dans [install-deps.ps1](../contracts/install-deps.ps1), [go.mod](../backend/go.mod) et [package.json](../web/package.json). Voir le contrat [DvPSettlement.sol](../contracts/src/DvPSettlement.sol) pour la définition faisant autorité.
+
+## Snapshot du marché
+
+GET /api/market (Go) relaie GET /market (Rust) : prix de référence, bid/ask, inventaires comptabilisés, réservés et disponibles. Les montants sont des chaînes à six décimales. Rust clone un snapshot sous verrou ; le frontend le rafraîchit toutes les trois secondes. Ces données ne suivent pas les transferts externes.
