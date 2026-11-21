@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"net/url"
@@ -317,6 +318,7 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		result.Settlement = &queued
+		slog.Info("trade queued", "rfq_id", rfq.RfqID, "trade_id", trade.TradeID, "maker_id", q.MakerID)
 		if s.Store != nil {
 			if err := s.Store.Complete(q.TradeID); err != nil {
 				fail(w, 503, "DATABASE_UNAVAILABLE", err.Error())

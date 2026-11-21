@@ -6,10 +6,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -67,6 +69,8 @@ type job struct {
 
 // Un seul worker attribue les nonces. Aucun appel réseau sous le mutex.
 type Manager struct {
+	attempts   atomic.Uint64
+	retries    atomic.Uint64
 	workMu     sync.Mutex
 	store      *durable.Store
 	mu         sync.Mutex
@@ -216,10 +220,13 @@ func (m *Manager) Run(ctx context.Context) {
 			}
 			m.mu.Unlock()
 			for _, j := range jobs {
+				m.attempts.Add(1)
 				attempt, cancel := context.WithTimeout(ctx, 4*time.Second)
 				err := m.step(attempt, j)
 				cancel()
 				if err != nil {
+					m.retries.Add(1)
+					slog.Warn("settlement retry", "trade_id", j.trade.TradeID, "rfq_id", j.trade.RfqID, "error", err)
 					hash := ""
 					if j.tx != nil {
 						hash = j.tx.Hash().Hex()
@@ -231,6 +238,21 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
+func (m *Manager) Metrics() (pending, settled, failed int, attempts, retries uint64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, j := range m.jobs {
+		switch j.result.Status {
+		case "SETTLEMENT_PENDING":
+			pending++
+		case "SETTLED":
+			settled++
+		case "SETTLEMENT_FAILED":
+			failed++
+		}
+	}
+	return pending, settled, failed, m.attempts.Load(), m.retries.Load()
+}
 func (m *Manager) notify(ctx context.Context, j *job, status, hash string, timestamp uint64) error {
 	var txHash any
 	if hash != "" {
@@ -433,5 +455,6 @@ func (m *Manager) finish(ctx context.Context, j *job) error {
 	if err := m.set(j, o.Status, o.Hash, "On-chain result verified; inventory accounting completed."); err != nil {
 		return err
 	}
+	slog.Info("settlement completed", "rfq_id", j.trade.RfqID, "trade_id", j.trade.TradeID, "status", o.Status, "transaction_hash", o.Hash)
 	return nil
 }

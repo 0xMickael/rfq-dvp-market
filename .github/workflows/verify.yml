@@ -67,6 +67,9 @@ jobs:
             .cache/integration/**/*.log
             .cache/recovery/*/*.log
             .cache/recovery/*/summary.json
+            .cache/performance/*/*/*.log
+            .cache/performance/*/*/report.json
+            .cache/performance/*/machine.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore
@@ -85,4 +88,7 @@ jobs:
           cache: false
       - name: Race detector
         working-directory: backend
+        run: go test -race -count=1 ./...
+      - name: Loadgen race detector
+        working-directory: loadgen
         run: go test -race -count=1 ./...

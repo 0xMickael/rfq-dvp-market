@@ -2,6 +2,7 @@
 
 pub mod domain;
 mod httpapi;
+mod metrics;
 mod rfqapi;
 
 use axum::{Json, Router, routing::get};
@@ -42,9 +43,19 @@ pub(crate) async fn blocking<T: Send + 'static>(
 }
 
 pub fn router_with_engine(engine: std::sync::Arc<domain::Engine>) -> Router {
+    let metrics = metrics::Metrics::default();
     httpapi::router(engine.clone())
         .merge(rfqapi::router(engine))
         .route("/healthz", get(health))
+        .merge(
+            Router::new()
+                .route("/metrics", get(metrics::expose))
+                .with_state(metrics.clone()),
+        )
+        .layer(axum::middleware::from_fn_with_state(
+            metrics,
+            metrics::record,
+        ))
 }
 
 async fn health() -> Json<Health> {
@@ -87,6 +98,30 @@ mod tests {
         assert_eq!(response.headers()[CONTENT_TYPE], "application/json");
         let body = to_bytes(response.into_body(), 1024).await.unwrap();
         assert_eq!(body.as_ref(), br#"{"status":"ok"}"#);
+    }
+
+    #[tokio::test]
+    async fn metrics_use_route_templates_instead_of_rfq_identifiers() {
+        let app = router();
+        for id in ["first", "second"] {
+            app.clone()
+                .oneshot(
+                    Request::get(format!("/rfqs/{id}"))
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+        }
+        let response = app
+            .oneshot(Request::get("/metrics").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let body = to_bytes(response.into_body(), 16384).await.unwrap();
+        let text = String::from_utf8(body.to_vec()).unwrap();
+        assert!(text.contains("route=\"/rfqs/{rfq_id}\",status=\"4xx\"} 2"));
+        assert!(!text.contains("/rfqs/first") && !text.contains("/rfqs/second"));
+        assert!(text.contains("le=\"+Inf\""));
     }
 
     #[tokio::test]

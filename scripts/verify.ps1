@@ -73,6 +73,13 @@ try {
         Invoke-Checked go @('vet','./...')
         Invoke-Checked go @('build','-o',(Join-Path $run 'api.exe'),'./cmd/rfq-dvp-market-api')
     }
+    Run-Check 'Loadgen Go : format, tests, vet, build' 'loadgen' {
+        $unformatted = & gofmt -l .
+        if ($LASTEXITCODE -ne 0 -or $unformatted) { throw "Incorrect loadgen formatting: $unformatted" }
+        Invoke-Checked go @('test','-count=1','./...')
+        Invoke-Checked go @('vet','./...')
+        Invoke-Checked go @('build','-o',(Join-Path $run 'loadgen.exe'),'.')
+    }
     Run-Check 'Solidity : format, tests, build et lint' 'contracts' {
         Invoke-Checked forge @('fmt','--check')
         Invoke-Checked forge @('test','-vv')
@@ -90,6 +97,9 @@ try {
         }
         Run-Check 'PostgreSQL recovery: real Go/Rust crashes on Anvil' '.' {
             & (Join-Path $PSScriptRoot 'test-recovery.ps1') -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -RustTargetDirectory $target
+        }
+        Run-Check 'Loadgen: three multi-wallet campaigns and invariant checks' '.' {
+            & (Join-Path $PSScriptRoot 'benchmark.ps1') -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -LoadgenBinary (Join-Path $run 'loadgen.exe') -Repetitions 1 -Concurrency 4 -Traders 4 -DurationSeconds 2 -WarmupSeconds 0 -Requests 12 -SettlementRequests 8 -AcceptPercent 75
         }
     }
     Run-Check 'Diff sans erreurs de whitespace' '.' { Invoke-Checked git @('diff','--check') }

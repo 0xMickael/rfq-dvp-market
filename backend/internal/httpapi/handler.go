@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net/http"
 	"rfq-dvp-market.local/backend/internal/engine"
+	"rfq-dvp-market.local/backend/internal/settlement"
 )
 
 func NewHandler() http.Handler { return Handler(engine.NewClient("http://127.0.0.1:8081")) }
@@ -64,5 +65,9 @@ func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 		w.WriteHeader(status)
 		_, _ = w.Write(body)
 	})
-	return mux
+	var manager *settlement.Manager
+	if service != nil {
+		manager = service.Settlement
+	}
+	return instrument(mux, manager)
 }

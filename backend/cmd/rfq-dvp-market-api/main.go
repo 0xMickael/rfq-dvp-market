@@ -19,6 +19,7 @@ import (
 
 func main() {
 	printIdentity := flag.Bool("print-market-id", false, "Print chain/deployment identity without starting services")
+	runWorker := flag.Bool("settlement-worker", true, "Process settlement jobs; false keeps the durable queue paused")
 	deployment := flag.String("deployment", "", "JSON de déploiement Anvil ; active les signers MM publics de démonstration")
 	rpcURL := flag.String("rpc", "", "RPC Anvil local ; active la soumission et le suivi du settlement")
 	address := flag.String("listen", "127.0.0.1:8080", "Adresse HTTP locale")
@@ -70,7 +71,9 @@ func main() {
 			cancel()
 			if err == nil {
 				defer signer.Settlement.Close()
-				go signer.Settlement.Run(ctx)
+				if *runWorker {
+					go signer.Settlement.Run(ctx)
+				}
 				if signer.Store != nil {
 					go signer.Recover(ctx)
 				}
