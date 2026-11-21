@@ -16,7 +16,7 @@ type Request struct {
 	Amount string `json:"amount"`
 }
 
-// Client transporte les montants Rust sans les convertir en nombres Go.
+// Client transports Rust amounts as strings without numeric conversion.
 type Client struct {
 	URL  string
 	HTTP *http.Client
@@ -51,7 +51,7 @@ func (c *Client) Call(ctx context.Context, method, path string, input any) (int,
 		return 0, nil, err
 	}
 	if len(data) > maxResponse || !json.Valid(data) {
-		return 0, nil, fmt.Errorf("réponse moteur invalide")
+		return 0, nil, fmt.Errorf("invalid engine response")
 	}
 	switch response.StatusCode {
 	case 200, 201, 400, 403, 404, 409, 410, 422:

@@ -9,14 +9,14 @@ pub struct ReferenceMarket {
 }
 
 impl ReferenceMarket {
-    /// P_ref = FaceValue / (1 + r * tau), arrondi vers le bas à six décimales.
+    /// P_ref = FaceValue / (1 + r * tau), rounded down to six decimal places.
     pub fn price(self) -> Result<Amount, MarketError> {
         if self.face_value == Amount::ZERO {
-            return Err(MarketError::InvalidConfiguration("nominal nul"));
+            return Err(MarketError::InvalidConfiguration("zero face value"));
         }
         if self.annual_rate.atoms() > SCALE || self.maturity_years.atoms() > 100 * SCALE {
             return Err(MarketError::InvalidConfiguration(
-                "taux hors [0, 1] ou maturité hors [0, 100] ans",
+                "rate outside [0, 1] or maturity outside [0, 100] years",
             ));
         }
         let scale_squared = u128::from(SCALE) * u128::from(SCALE);
@@ -25,7 +25,7 @@ impl ReferenceMarket {
         let price = from_wide(u128::from(self.face_value.atoms()) * scale_squared / denominator)?;
         if price == Amount::ZERO {
             return Err(MarketError::InvalidConfiguration(
-                "prix de référence inférieur à un atome",
+                "reference price is less than one atom",
             ));
         }
         Ok(price)
@@ -42,12 +42,12 @@ pub struct Inventory {
 pub struct MarketMaker {
     pub id: String,
     pub inventory: Inventory,
-    /// Snapshot des sorties déjà engagées. Ce module ne crée pas de réservation.
+    /// Snapshot of committed outgoing assets; pricing does not create reservations.
     pub reserved: Inventory,
     pub target_tbill: Amount,
-    /// lambda, en sEUR / tBILL par unité de déviation relative.
+    /// lambda, in sEUR / tBILL per unit of relative inventory deviation.
     pub inventory_skew: Amount,
-    /// Spread total, en sEUR / tBILL.
+    /// Full spread in sEUR / tBILL.
     pub spread: Amount,
 }
 
@@ -68,13 +68,13 @@ impl MarketMaker {
     pub fn prices(&self, reference_price: Amount) -> Result<Prices, MarketError> {
         if self.id.trim().is_empty() || self.target_tbill == Amount::ZERO {
             return Err(MarketError::InvalidConfiguration(
-                "identifiant vide ou target nul",
+                "empty maker ID or zero target",
             ));
         }
         self.available()?;
         let deviation =
             i128::from(self.inventory.tbill.atoms()) - i128::from(self.target_tbill.atoms());
-        // Une seule division : ne pas arrondir d'abord la déviation relative.
+        // Divide once, without rounding the relative deviation first.
         let skew = i128::from(self.inventory_skew.atoms())
             .checked_mul(deviation)
             .ok_or(MarketError::ArithmeticOverflow)?
@@ -82,7 +82,7 @@ impl MarketMaker {
         let mid = i128::from(reference_price.atoms())
             .checked_sub(skew)
             .ok_or(MarketError::ArithmeticOverflow)?;
-        // Si le spread a un nombre impair d'atomes, arrondir les deux prix vers l'extérieur.
+        // For an odd spread in atoms, round both prices outward.
         let half_spread = i128::from(self.spread.atoms().div_ceil(2));
         let bid = mid
             .checked_sub(half_spread)
@@ -91,7 +91,7 @@ impl MarketMaker {
             .checked_add(half_spread)
             .ok_or(MarketError::ArithmeticOverflow)?;
         if bid <= 0 {
-            return Err(MarketError::InvalidConfiguration("bid nul ou négatif"));
+            return Err(MarketError::InvalidConfiguration("zero or negative bid"));
         }
         Ok(Prices {
             bid: Amount::from_atoms(

@@ -1,4 +1,4 @@
-//! Domaine de marché indépendant du réseau et adaptateurs HTTP locaux.
+//! Market domain and local HTTP adapters.
 
 pub mod domain;
 mod httpapi;
@@ -15,7 +15,7 @@ struct Health {
 
 pub fn demo_engine() -> domain::Engine {
     domain::Engine::new(
-        domain::Market::demo().expect("configuration de démonstration valide"),
+        domain::Market::demo().expect("valid demo configuration"),
         domain::Timing {
             quote_seconds: 120,
             settlement_seconds: 600,
@@ -23,7 +23,7 @@ pub fn demo_engine() -> domain::Engine {
         || {
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .expect("horloge Unix disponible")
+                .expect("Unix clock is available")
                 .as_secs()
         },
     )

@@ -12,9 +12,9 @@ pub enum Side {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RequestAmount {
-    /// Quantité exacte de titres, dans les deux sens.
+    /// Exact security quantity for either side.
     Tbill(Amount),
-    /// Budget maximal pour BUY ; cash minimal à recevoir pour SELL.
+    /// Maximum BUY budget or minimum SELL cash proceeds.
     Cash(Amount),
 }
 
@@ -35,7 +35,7 @@ pub struct Quote {
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct QuoteBook {
-    /// Classées du meilleur prix au moins bon, puis par identifiant MM en cas d'égalité.
+    /// Sorted by best price first, then maker ID to break ties.
     pub quotes: Vec<Quote>,
     pub rejections: Vec<MakerRejection>,
 }
@@ -46,7 +46,7 @@ impl QuoteBook {
     }
 }
 
-/// Snapshot immuable. Obtenir une quote ne bloque pas les fonds ni les titres.
+/// Immutable snapshot; requesting a quote does not reserve either asset.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Market {
     reference_price: Amount,
@@ -57,14 +57,14 @@ impl Market {
     pub fn new(reference: ReferenceMarket, makers: Vec<MarketMaker>) -> Result<Self, MarketError> {
         let reference_price = reference.price()?;
         if makers.is_empty() {
-            return Err(MarketError::InvalidConfiguration("aucun market maker"));
+            return Err(MarketError::InvalidConfiguration("no market makers"));
         }
         for (index, maker) in makers.iter().enumerate() {
             if makers[..index]
                 .iter()
                 .any(|previous| previous.id == maker.id)
             {
-                return Err(MarketError::InvalidConfiguration("identifiant MM dupliqué"));
+                return Err(MarketError::InvalidConfiguration("duplicate maker ID"));
             }
             maker.prices(reference_price)?;
         }

@@ -43,7 +43,7 @@ func TestVerifiedSignaturePrecedesReservationAndMMSigning(t *testing.T) {
 					var input map[string]string
 					_ = json.NewDecoder(r.Body).Decode(&input)
 					if input["trade_id"] != q.TradeID || input["trader_id"] != trader {
-						t.Error("réservation non liée à la signature")
+						t.Error("reservation does not match signature")
 					}
 					if mode == "insufficient" {
 						fail(w, 409, "INSUFFICIENT_INVENTORY", "insuffisant")
@@ -121,17 +121,17 @@ func TestVerifiedSignaturePrecedesReservationAndMMSigning(t *testing.T) {
 					}
 					repeat := call()
 					if repeat.Code != 200 || repeat.Body.String() != result.Body.String() {
-						t.Fatal("retry non identique")
+						t.Fatal("retry differs from the original")
 					}
 					if posts != 1 {
-						t.Fatal("double réservation", posts)
+						t.Fatal("duplicate reservation", posts)
 					}
 				} else {
 					if result.Code < 400 || strings.Contains(result.Body.String(), "buyer_signature") {
-						t.Fatal("signature MM émise malgré échec", result.Body.String())
+						t.Fatal("MM signature issued despite failure", result.Body.String())
 					}
 					if (mode == "invalid-signature" || mode == "altered-signature" || mode == "expired") && posts != 0 {
-						t.Fatal("réservation avant validation")
+						t.Fatal("reservation created before validation")
 					}
 				}
 			})
@@ -143,12 +143,12 @@ func TestSigningConfigurationAndDisabledMode(t *testing.T) {
 	cfg := demoConfig()
 	cfg.ChainID = 1
 	if _, err := NewSigningService(nil, cfg); err == nil {
-		t.Fatal("mainnet accepté")
+		t.Fatal("mainnet accepted")
 	}
 	cfg = demoConfig()
 	cfg.MM1 = cfg.MM2
 	if _, err := NewSigningService(nil, cfg); err == nil {
-		t.Fatal("mauvaise clé MM acceptée")
+		t.Fatal("incorrect MM key accepted")
 	}
 	handler := Handler(engine.NewClient("http://127.0.0.1:1"))
 	response := httptest.NewRecorder()

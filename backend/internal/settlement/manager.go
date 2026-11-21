@@ -67,7 +67,7 @@ type job struct {
 	result   Result
 }
 
-// Un seul worker attribue les nonces. Aucun appel réseau sous le mutex.
+// One worker assigns nonces; mu protects jobs and workMu serializes processing and reconciliation.
 type Manager struct {
 	attempts   atomic.Uint64
 	retries    atomic.Uint64
@@ -87,7 +87,7 @@ type Manager struct {
 func New(ctx context.Context, endpoint string, c signing.Config, e *engine.Client) (*Manager, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil || u.Scheme != "http" || (u.Hostname() != "127.0.0.1" && u.Hostname() != "localhost") {
-		return nil, fmt.Errorf("RPC HTTP local Anvil requis")
+		return nil, fmt.Errorf("local Anvil HTTP RPC required")
 	}
 	if err := c.Validate(); err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func New(ctx context.Context, endpoint string, c signing.Config, e *engine.Clien
 	if err != nil {
 		return nil, err
 	}
-	// Compte public Anvil index 5, réservé au gas de cette démo.
+	// Public Anvil account index 5 pays for local settlement gas.
 	key, _ := crypto.HexToECDSA("8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba")
 	m := &Manager{rpc: rpc, engine: e, config: c, key: key, from: crypto.PubkeyToAddress(key.PublicKey), jobs: map[string]*job{}}
 	if err := m.validate(ctx); err != nil {
@@ -117,7 +117,7 @@ func (m *Manager) validate(ctx context.Context) error {
 		return err
 	}
 	if id.Cmp(big.NewInt(31337)) != 0 {
-		return fmt.Errorf("chaîne RPC différente d’Anvil 31337")
+		return fmt.Errorf("RPC chain is not Anvil 31337")
 	}
 	for _, address := range []string{m.config.Settlement, m.config.CashToken, m.config.SecurityToken} {
 		code, err := m.rpc.CodeAt(ctx, common.HexToAddress(address), nil)
@@ -125,7 +125,7 @@ func (m *Manager) validate(ctx context.Context) error {
 			return err
 		}
 		if len(code) == 0 {
-			return fmt.Errorf("contrat absent : %s", address)
+			return fmt.Errorf("contract missing: %s", address)
 		}
 	}
 	for name, expected := range map[string]string{"cashToken": m.config.CashToken, "securityToken": m.config.SecurityToken} {
@@ -134,7 +134,7 @@ func (m *Manager) validate(ctx context.Context) error {
 			return err
 		}
 		if output[0].(common.Address) != common.HexToAddress(expected) {
-			return fmt.Errorf("paire DvP incorrecte")
+			return fmt.Errorf("incorrect DvP token pair")
 		}
 	}
 	for _, address := range []string{m.config.CashToken, m.config.SecurityToken} {
@@ -143,7 +143,7 @@ func (m *Manager) validate(ctx context.Context) error {
 			return err
 		}
 		if output[0].(uint8) != 6 {
-			return fmt.Errorf("six décimales requises")
+			return fmt.Errorf("six decimal places required")
 		}
 	}
 	return nil
@@ -195,7 +195,7 @@ func (m *Manager) Enqueue(t engine.Trade, data apitypes.TypedData, buyer, seller
 	if existing, ok := m.jobs[t.TradeID]; ok {
 		return existing.result, nil
 	}
-	result := Result{TradeID: t.TradeID, Status: "SETTLEMENT_PENDING", Message: "Signatures vérifiées ; settlement en attente."}
+	result := Result{TradeID: t.TradeID, Status: "SETTLEMENT_PENDING", Message: "Signatures verified; settlement pending."}
 	j := &job{trade: t, terms: value, data: encoded, result: result}
 	if err := m.save(j); err != nil {
 		return Result{}, err
@@ -231,7 +231,7 @@ func (m *Manager) Run(ctx context.Context) {
 					if j.tx != nil {
 						hash = j.tx.Hash().Hex()
 					}
-					m.set(j, "SETTLEMENT_PENDING", hash, err.Error()+" ; réservation conservée, suivi automatique.")
+					m.set(j, "SETTLEMENT_PENDING", hash, err.Error()+"; inventory remains reserved, tracking continues automatically.")
 				}
 			}
 		}
@@ -264,11 +264,11 @@ func (m *Manager) notify(ctx context.Context, j *job, status, hash string, times
 		return err
 	}
 	if code != 200 {
-		return fmt.Errorf("notification Rust refusée (%d)", code)
+		return fmt.Errorf("Rust notification rejected (%d)", code)
 	}
 	var trade engine.Trade
 	if json.Unmarshal(body, &trade) != nil || trade.TradeID != j.trade.TradeID || trade.Status != status {
-		return fmt.Errorf("notification Rust incohérente")
+		return fmt.Errorf("inconsistent Rust notification")
 	}
 	return nil
 }
@@ -293,7 +293,7 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 	if err != nil {
 		return err
 	}
-	// Les signatures peuvent aussi être soumises par une autre partie.
+	// Another party may also submit the authorized signatures.
 	if state[0].(bool) {
 		event := contractABI.Events["TradeSettled"]
 		logs, err := m.rpc.FilterLogs(ctx, ethereum.FilterQuery{FromBlock: big.NewInt(0), ToBlock: header.Number, Addresses: []common.Address{to}, Topics: [][]common.Hash{{event.ID}, {common.Hash(j.terms.TradeId)}, {common.BytesToHash(j.terms.Buyer.Bytes())}, {common.BytesToHash(j.terms.Seller.Bytes())}}})
@@ -306,7 +306,7 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 				return err
 			}
 			if values[0].(*big.Int).Cmp(j.terms.CashAmount) != 0 || values[1].(*big.Int).Cmp(j.terms.SecurityAmount) != 0 {
-				return fmt.Errorf("événement settlement avec montants différents")
+				return fmt.Errorf("settlement event amounts do not match")
 			}
 			receipt, err := m.rpc.TransactionReceipt(ctx, log.TxHash)
 			if err != nil {
@@ -317,7 +317,7 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 				return err
 			}
 			if receipt.Status != types.ReceiptStatusSuccessful || receipt.BlockHash != block.Hash() || log.BlockHash != block.Hash() || log.Removed {
-				return fmt.Errorf("preuve non canonique")
+				return fmt.Errorf("noncanonical settlement evidence")
 			}
 			j.observed = &observation{Status: "SETTLED", Hash: log.TxHash.Hex(), Timestamp: block.Time}
 			if err := m.save(j); err != nil {
@@ -326,19 +326,19 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 			failpoint.Hit("after_inclusion")
 			return m.finish(ctx, j)
 		}
-		return fmt.Errorf("trade consommé sans événement vérifiable")
+		return fmt.Errorf("trade consumed without a verifiable event")
 	}
 	if header.Time >= j.trade.SettlementDeadline {
 		if j.tx != nil {
-			// Un nonce signé ne doit pas être abandonné : les transactions suivantes
-			// resteraient bloquées derrière lui. Même expirée, cette transaction
-			// peut être incluse avec un revert, sans déplacer de tokens.
+			// Never abandon a signed nonce: subsequent transactions would remain
+			// blocked behind it. Even an expired transaction can be included
+			// with a revert, without moving any tokens.
 			_, err := m.rpc.TransactionReceipt(ctx, j.tx.Hash())
 			if err == ethereum.NotFound {
 				if err := m.rpc.SendTransaction(ctx, j.tx); err != nil {
 					return err
 				}
-				return fmt.Errorf("deadline atteinte ; attente de consommation du nonce submitter")
+				return fmt.Errorf("deadline reached; waiting for submitter nonce consumption")
 			}
 			if err != nil {
 				return err
@@ -349,7 +349,7 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 			return err
 		}
 		if current.Hash() != header.Hash() {
-			return fmt.Errorf("bloc modifié pendant la vérification")
+			return fmt.Errorf("block changed during verification")
 		}
 		hash := ""
 		if j.tx != nil {
@@ -378,11 +378,11 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 			return err
 		}
 		if common.Hash(output[0].([32]byte)) != common.BytesToHash(digest) {
-			return fmt.Errorf("domaine EIP-712 du contrat incorrect")
+			return fmt.Errorf("incorrect contract EIP-712 domain")
 		}
 		gas, err := m.rpc.EstimateGas(ctx, ethereum.CallMsg{From: m.from, To: &to, Data: j.data})
 		if err != nil {
-			return fmt.Errorf("simulation refusée (soldes, allowances ou deadline) : %w", err)
+			return fmt.Errorf("simulation rejected (balances, allowances or deadline): %w", err)
 		}
 		price, err := m.rpc.SuggestGasPrice(ctx)
 		if err != nil {
@@ -414,16 +414,16 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 	receipt, err := m.rpc.TransactionReceipt(ctx, j.tx.Hash())
 	if err == nil {
 		if receipt.Status == types.ReceiptStatusFailed {
-			return fmt.Errorf("transaction revertée ; attente de résolution à la deadline")
+			return fmt.Errorf("transaction reverted; waiting for resolution at the deadline")
 		}
-		return fmt.Errorf("receipt reçu, vérification du settlement au prochain passage")
+		return fmt.Errorf("receipt received; verifying settlement on the next pass")
 	}
 	if err != ethereum.NotFound {
 		return err
 	}
-	// Une réponse perdue ne crée pas une nouvelle transaction : mêmes octets et nonce.
+	// A lost response reuses the same transaction bytes and nonce.
 	if err := m.rpc.SendTransaction(ctx, j.tx); err != nil {
-		return fmt.Errorf("soumission RPC à vérifier : %w", err)
+		return fmt.Errorf("RPC submission needs verification: %w", err)
 	}
 	failpoint.Hit("after_send")
 	return m.set(j, "SETTLEMENT_PENDING", hash, "Transaction submitted; awaiting confirmation.")

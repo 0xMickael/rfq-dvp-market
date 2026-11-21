@@ -2,8 +2,8 @@ use super::MarketError;
 
 pub const SCALE: u64 = 1_000_000;
 
-/// Valeur non négative à six décimales. L'unité est indiquée par le champ métier.
-/// Le stockage u64 est élargi en u128 pour les produits de deux montants.
+/// Nonnegative amount with six decimal places; the domain field defines its unit.
+/// u64 storage is widened to u128 when multiplying two amounts.
 #[derive(
     Debug,
     Default,
@@ -34,7 +34,7 @@ impl Amount {
             .checked_sub(other.0)
             .map(Self)
             .ok_or(MarketError::InvalidConfiguration(
-                "réservation supérieure à l'inventaire",
+                "reservation exceeds inventory",
             ))
     }
 }
@@ -84,7 +84,7 @@ pub(super) fn from_wide(atoms: u128) -> Result<Amount, MarketError> {
         .map_err(|_| MarketError::ArithmeticOverflow)
 }
 
-/// Le quotient + reste évite l'overflow de la formule (n + d - 1) / d.
+/// Quotient and remainder avoid the overflow risk in (n + d - 1) / d.
 pub(super) fn divide_up(numerator: u128, denominator: u128) -> u128 {
     numerator / denominator + u128::from(!numerator.is_multiple_of(denominator))
 }

@@ -1,37 +1,37 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Cotation pédagogique de tBILL contre sEUR." />
-  <title>rfq-dvp-market — cotation</title>
+  <meta name="description" content="A local RFQ market for fictional tBILL and sEUR tokens." />
+  <title>rfq-dvp-market — quotes</title>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <main>
     <header class="page-header">
-      <div><span class="eyebrow">RFQ / DVP · MARKET LAB</span><h1>Le marché, en clair.</h1><span class="badge">ANVIL · SIMULATION LOCALE</span></div>
-      <aside class="wallet-panel" aria-label="Votre wallet">
-        <button id="connect" type="button">Connecter le wallet</button>
-        <p id="wallet-status" role="status">Sans wallet : cotation indicative.</p>
+      <div><span class="eyebrow">RFQ / DVP · MARKET LAB</span><h1>The market, made clear.</h1><span class="badge">ANVIL · LOCAL SIMULATION</span></div>
+      <aside class="wallet-panel" aria-label="Your wallet">
+        <button id="connect" type="button">Connect wallet</button>
+        <p id="wallet-status" role="status">Without a wallet: indicative quotes only.</p>
         <p id="balances" role="status"></p>
       </aside>
     </header>
-    <p>Marché RFQ pédagogique de tBILL contre sEUR.</p>
-    <p>Démo locale Anvil : tokens fictifs. Après votre signature, le backend peut soumettre l’échange atomique et suivre sa confirmation.</p>
-    <div class="workspace"><section><h2>01 / Votre demande</h2><form id="quote-form">
-      <label>Je souhaite<select id="side"><option value="BUY">Acheter des tBILL</option><option value="SELL">Vendre des tBILL</option></select></label>
-      <label>Définir ma demande par<select id="unit"><option value="tBILL">Une quantité de tBILL</option><option value="sEUR">Un budget maximal en sEUR</option></select></label>
-      <label><span id="amount-label">Quantité de tBILL à acheter</span><input id="amount" type="text" inputmode="decimal" value="100" required maxlength="32" aria-describedby="amount-help" /></label>
-      <p id="amount-help">Quantité exacte de tBILL, jusqu'à six décimales. Utiliser un point décimal.</p>
-      <button type="submit">Demander les quotes</button>
-    </form></section><section><h2>02 / Offres des contreparties</h2>
+    <p>A local RFQ market for fictional tBILL and sEUR tokens.</p>
+    <p>Sign a quote to authorize an atomic exchange. The backend submits settlement and tracks its result.</p>
+    <div class="workspace"><section><h2>01 / Your request</h2><form id="quote-form">
+      <label>I want to<select id="side"><option value="BUY">Buy tBILL</option><option value="SELL">Sell tBILL</option></select></label>
+      <label>Specify my request by<select id="unit"><option value="tBILL">A tBILL quantity</option><option value="sEUR">A maximum sEUR budget</option></select></label>
+      <label><span id="amount-label">tBILL quantity to buy</span><input id="amount" type="text" inputmode="decimal" value="100" required maxlength="32" aria-describedby="amount-help" /></label>
+      <p id="amount-help">Exact tBILL quantity, up to six decimal places. Use a decimal point.</p>
+      <button type="submit">Request quotes</button>
+    </form></section><section><h2>02 / Counterparty quotes</h2>
     <p id="frontend-status" role="status" aria-live="polite"></p>
-    <div class="scroll"><table aria-label="Quotes reçues"><thead><tr><th scope="col">Contrepartie</th><th scope="col">Prix sEUR/tBILL</th><th scope="col">tBILL</th><th scope="col">Total sEUR</th><th scope="col">Action</th></tr></thead><tbody id="quotes"></tbody></table></div>
-    <ul id="rejections" aria-label="Refus des market makers"></ul>
-    </section></div><section class="settlement"><h2>03 / Suivi du trade</h2><p class="muted">Signature → réservation → transaction → résultat confirmé</p><p id="trade-status" role="status" aria-live="polite"></p>
-    <button id="retry" type="button" hidden>Reprendre l’acceptation avec la même signature</button>
-    </section><section><h2>Les market makers</h2><p id="market-status">Chargement…</p><p class="muted">Inventaires du moteur et prix courants. Les quotes déjà émises conservent leurs termes.</p><div id="makers" class="makers"></div></section><footer>Tokens fictifs · Session réinitialisée au redémarrage</footer><noscript>Activer JavaScript pour demander des quotes.</noscript>
+    <div class="scroll"><table aria-label="Received quotes"><thead><tr><th scope="col">Counterparty</th><th scope="col">Price sEUR/tBILL</th><th scope="col">tBILL</th><th scope="col">Total sEUR</th><th scope="col">Action</th></tr></thead><tbody id="quotes"></tbody></table></div>
+    <ul id="rejections" aria-label="Market maker rejections"></ul>
+    </section></div><section class="settlement"><h2>03 / Trade status</h2><p class="muted">Signature → reservation → transaction → verified result</p><p id="trade-status" role="status" aria-live="polite"></p>
+    <button id="retry" type="button" hidden>Retry acceptance with the same signature</button>
+    </section><section><h2>Market makers</h2><p id="market-status">Loading...</p><p class="muted">Engine inventories and current prices. Existing quotes retain their original terms.</p><div id="makers" class="makers"></div></section><footer>Fictional tokens · Local Anvil only</footer><noscript>Enable JavaScript to request quotes.</noscript>
   </main>
   <script type="module" src="/src/main.ts"></script>
 </body>

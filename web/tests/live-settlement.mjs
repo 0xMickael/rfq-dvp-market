@@ -77,17 +77,17 @@ for (const side of ['BUY','SELL']) for (const unit of ['tBILL','sEUR']) {
  });
  assert.equal(notification.status,200);
  assert.deepEqual(await market(),snapshot);
- console.log(`OK ${side}/${unit}: ${result.transaction_hash}, soldes exacts, retry sans double règlement`);
+ console.log(`OK ${side}/${unit}: ${result.transaction_hash}, exact balances, retry without duplicate settlement`);
 }
-// Plusieurs transactions du même submitter : nonces distincts et aucun doublon.
+// Concurrent transactions from one submitter use distinct nonces without duplicates.
 const concurrent = await Promise.all([prepare('BUY'),prepare('SELL')]);
 await Promise.all(concurrent.map(p=>api(`/api/rfqs/${p.rfq.rfq_id}/accept`,p.payload)));
 const results = await Promise.all(concurrent.map(p=>wait(p)));
 assert.notEqual(results[0].transaction_hash,results[1].transaction_hash);
 const txs = await Promise.all(results.map(r=>provider.getTransaction(r.transaction_hash)));
 assert.notEqual(txs[0].nonce,txs[1].nonce);
-console.log('OK concurrence BUY/SELL : nonces distincts');
-// Une allowance manquante ne libère pas prématurément la réservation.
+console.log('OK concurrent BUY/SELL: distinct nonces');
+// A missing allowance must not release a reservation early.
 await (await cash.approve(c.settlement,0)).wait();
 const failed = await prepare('BUY');
 const beforeFailure = await market();
@@ -103,5 +103,5 @@ await wait(failed,'SETTLEMENT_FAILED');
 assert.equal(await dvp.settled(failed.data.message.buyer,failed.data.message.seller,failed.q.trade_id),false);
 assert.equal((await api(`/api/rfqs/${failed.rfq.rfq_id}`)).trade.status,'SETTLEMENT_FAILED');
 assert.deepEqual(await market(),beforeFailure);
-console.log('OK allowance absente : conservation puis libération après deadline on-chain');
+console.log('OK missing allowance: reservation retained, then released after the on-chain deadline');
 provider.destroy();

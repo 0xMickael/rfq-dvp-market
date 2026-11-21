@@ -14,7 +14,7 @@ $transcribing = $false
 $mutex = [Threading.Mutex]::new($false,'Local\rfq-dvp-market-verify')
 $ownsMutex = $false
 function Run-Check([string]$Name, [string]$Directory, [scriptblock]$Action) {
-    Write-Host "Verification : $Name"
+    Write-Host "Verification: $Name"
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $ok = $false
     Push-Location (Join-Path $root $Directory)
@@ -26,15 +26,15 @@ function Run-Check([string]$Name, [string]$Directory, [scriptblock]$Action) {
 }
 function Invoke-Checked([string]$Command, [string[]]$Arguments) {
     & $Command @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "$Command echoue (code $LASTEXITCODE)." }
+    if ($LASTEXITCODE -ne 0) { throw "$Command failed (exit code $LASTEXITCODE)." }
 }
 try {
     try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $ownsMutex = $true }
-    if (-not $ownsMutex) { throw 'Une verification est deja en cours.' }
+    if (-not $ownsMutex) { throw 'Another verification is already running.' }
     $env:Path += ';' + [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
     foreach ($command in @('git','go','gofmt','cargo','rustc','forge','anvil','node','npm.cmd')) {
         if (-not (Get-Command $command -CommandType Application -ErrorAction SilentlyContinue)) {
-            throw "Outil absent : $command. Voir docs/development.md."
+            throw "Missing tool: $command. See docs/development.md."
         }
     }
     New-Item -ItemType Directory -Path $run -Force | Out-Null
@@ -42,7 +42,7 @@ try {
     $transcribing = $true
     $env:GOCACHE = Join-Path $root '.cache/go-build'
     $versions = Get-Content (Join-Path $PSScriptRoot 'toolchains.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    Run-Check 'Versions et prerequis' '.' {
+    Run-Check 'Versions and prerequisites' '.' {
         $actual = @{
             go = ((& go version) -split ' ')[2].Substring(2)
             rust = ((& rustc "+$($versions.rust)" --version) -split ' ')[1]
@@ -52,11 +52,11 @@ try {
         }
         foreach ($name in $actual.Keys) {
             Write-Host "$name : $($actual[$name])"
-            if ($actual[$name] -ne $versions.$name) { throw "$name : version $($versions.$name) requise, trouve $($actual[$name])." }
+            if ($actual[$name] -ne $versions.$name) { throw "$name : required version $($versions.$name), found $($actual[$name])." }
         }
-        if (((& anvil --version)[0] -split ' ')[2] -ne $versions.foundry) { throw 'Version Anvil differente de Forge.' }
+        if (((& anvil --version)[0] -split ' ')[2] -ne $versions.foundry) { throw 'Anvil and Forge versions differ.' }
         foreach ($file in @('contracts/lib/forge-std/src/Script.sol','contracts/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol','web/node_modules/vite/bin/vite.js')) {
-            if (-not (Test-Path -LiteralPath (Join-Path $root $file))) { throw "Dependance absente : $file. Voir docs/development.md." }
+            if (-not (Test-Path -LiteralPath (Join-Path $root $file))) { throw "Missing dependency: $file. See docs/development.md." }
         }
     }
     Run-Check 'Rust : format, tests, Clippy, build' 'market-engine' {
@@ -68,7 +68,7 @@ try {
     }
     Run-Check 'Go : format, tests, vet, build' 'backend' {
         $unformatted = & gofmt -l cmd internal
-        if ($LASTEXITCODE -ne 0 -or $unformatted) { throw "Format Go incorrect : $unformatted" }
+        if ($LASTEXITCODE -ne 0 -or $unformatted) { throw "Incorrect Go formatting: $unformatted" }
         Invoke-Checked go @('test','-count=1','./...')
         Invoke-Checked go @('vet','./...')
         Invoke-Checked go @('build','-o',(Join-Path $run 'api.exe'),'./cmd/rfq-dvp-market-api')
@@ -80,7 +80,7 @@ try {
         Invoke-Checked go @('vet','./...')
         Invoke-Checked go @('build','-o',(Join-Path $run 'loadgen.exe'),'.')
     }
-    Run-Check 'Solidity : format, tests, build et lint' 'contracts' {
+    Run-Check 'Solidity: format, tests, build and lint' 'contracts' {
         Invoke-Checked forge @('fmt','--check')
         Invoke-Checked forge @('test','-vv')
         Invoke-Checked forge @('build')
@@ -91,7 +91,7 @@ try {
     }
     if (-not $SkipIntegration) {
         foreach ($scenario in @('Signatures','Settlement')) {
-            Run-Check "Integration $scenario : vrais processus via Vite" '.' {
+            Run-Check "Integration $scenario : real processes through Vite" '.' {
                 & (Join-Path $PSScriptRoot 'test-app-settlement.ps1') -Scenario $scenario -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -WebDist (Join-Path $run 'web')
             }
         }
@@ -102,9 +102,9 @@ try {
             & (Join-Path $PSScriptRoot 'benchmark.ps1') -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -LoadgenBinary (Join-Path $run 'loadgen.exe') -Repetitions 1 -Concurrency 4 -Traders 4 -DurationSeconds 2 -WarmupSeconds 0 -Requests 12 -SettlementRequests 8 -AcceptPercent 75
         }
     }
-    Run-Check 'Diff sans erreurs de whitespace' '.' { Invoke-Checked git @('diff','--check') }
+    Run-Check 'Diff whitespace check' '.' { Invoke-Checked git @('diff','--check') }
     $passed = $true
-    Write-Host "VERIFICATIONS REUSSIES. Integration executee : $(-not $SkipIntegration). Rapport : $run"
+    Write-Host "VERIFICATION PASSED. Integration enabled: $(-not $SkipIntegration). Report: $run"
 } finally {
     if ($transcribing) {
         $summary = [ordered]@{passed=$passed; integration_requested=(-not $SkipIntegration); steps=@($steps.ToArray())}

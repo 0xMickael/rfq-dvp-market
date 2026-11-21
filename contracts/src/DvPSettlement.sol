@@ -71,7 +71,7 @@ contract DvPSettlement is EIP712, ReentrancyGuard {
             ECDSA.recover(digest, buyerSignature) != trade.buyer
                 || ECDSA.recover(digest, sellerSignature) != trade.seller
         ) revert InvalidSignature();
-        // Un revert de transfert annule aussi la consommation de l'identifiant.
+        // A transfer revert also rolls back consumption of the trade ID.
         settled[trade.buyer][trade.seller][trade.tradeId] = true;
         cashToken.safeTransferFrom(trade.buyer, trade.seller, trade.cashAmount);
         securityToken.safeTransferFrom(trade.seller, trade.buyer, trade.securityAmount);

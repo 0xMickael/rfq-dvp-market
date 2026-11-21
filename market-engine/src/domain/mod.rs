@@ -1,4 +1,4 @@
-//! Cotation pure et moteur de réservation en mémoire, indépendants du réseau.
+//! Exact quoting, inventory reservations and market state transitions.
 
 mod amount;
 mod engine;
@@ -48,16 +48,13 @@ pub enum MarketError {
 impl std::fmt::Display for MarketError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::InvalidDecimal => write!(f, "montant décimal invalide"),
-            Self::TooManyDecimals => write!(f, "six décimales au maximum"),
-            Self::ArithmeticOverflow => write!(f, "montant ou calcul hors limites"),
-            Self::ZeroAmount => write!(f, "le montant demandé doit être strictement positif"),
-            Self::InvalidConfiguration(reason) => write!(f, "configuration invalide : {reason}"),
+            Self::InvalidDecimal => write!(f, "invalid decimal amount"),
+            Self::TooManyDecimals => write!(f, "at most six decimal places"),
+            Self::ArithmeticOverflow => write!(f, "amount or arithmetic out of range"),
+            Self::ZeroAmount => write!(f, "requested amount must be positive"),
+            Self::InvalidConfiguration(reason) => write!(f, "invalid configuration: {reason}"),
             Self::NoExecutableQuote(rejections) => {
-                write!(
-                    f,
-                    "aucun market maker ne peut servir la demande : {rejections:?}"
-                )
+                write!(f, "no market maker can fill the request: {rejections:?}")
             }
         }
     }

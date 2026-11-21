@@ -142,7 +142,7 @@ fn invalid_json(rejection: JsonRejection) -> Response {
     error(
         rejection.status(),
         "INVALID_REQUEST",
-        "Corps JSON invalide ou champs inconnus.".into(),
+        "Invalid JSON body or unknown fields.".into(),
         vec![],
     )
 }
@@ -204,13 +204,13 @@ pub(super) fn engine_error(e: EngineError) -> Response {
         EngineError::InvalidTransition => (
             StatusCode::CONFLICT,
             "INVALID_TRANSITION",
-            "Transition de settlement invalide.",
+            "Invalid settlement transition.",
         ),
         EngineError::Market(MarketError::NoExecutableQuote(items)) => {
             return error(
                 StatusCode::UNPROCESSABLE_ENTITY,
                 "NO_EXECUTABLE_QUOTE",
-                "Aucun MM ne peut servir la demande entière.".into(),
+                "No market maker can fill the entire request.".into(),
                 items,
             );
         }
@@ -225,43 +225,43 @@ pub(super) fn engine_error(e: EngineError) -> Response {
         EngineError::InvalidTrader => (
             StatusCode::BAD_REQUEST,
             "INVALID_TRADER",
-            "Identité déclarative requise : 1 à 64 caractères ASCII alphanumériques, _ ou -.",
+            "Declared identity required: 1 to 64 ASCII letters, digits, _ or -.",
         ),
         EngineError::UnknownRfq => (StatusCode::NOT_FOUND, "UNKNOWN_RFQ", "Unknown RFQ."),
         EngineError::WrongTrader => (
             StatusCode::FORBIDDEN,
             "WRONG_TRADER",
-            "Identité différente de celle de la RFQ ; ce contrôle ne constitue pas une authentification.",
+            "Identity does not match the RFQ; this check is not authentication.",
         ),
         EngineError::UnknownQuote => (
             StatusCode::NOT_FOUND,
             "UNKNOWN_QUOTE",
-            "Quote inconnue pour cette RFQ.",
+            "Unknown quote for this RFQ.",
         ),
         EngineError::WrongTradeId => (
             StatusCode::CONFLICT,
             "WRONG_TRADE_ID",
-            "Identifiant signé différent de la quote courante.",
+            "Signed trade ID does not match the quote.",
         ),
         EngineError::AlreadyAccepted => (
             StatusCode::CONFLICT,
             "ALREADY_ACCEPTED",
-            "RFQ déjà acceptée. Consulter la RFQ pour retrouver le trade.",
+            "RFQ already accepted; read the RFQ to retrieve its trade.",
         ),
         EngineError::Expired => (
             StatusCode::GONE,
             "QUOTE_EXPIRED",
-            "Expiration commerciale atteinte.",
+            "Quote acceptance deadline reached.",
         ),
         EngineError::InsufficientInventory { .. } => (
             StatusCode::CONFLICT,
             "INSUFFICIENT_INVENTORY",
-            "Inventaire MM devenu insuffisant ; aucune réservation effectuée.",
+            "Maker inventory is no longer sufficient; no reservation created.",
         ),
         EngineError::ExhaustedIds | EngineError::Unavailable => (
             StatusCode::SERVICE_UNAVAILABLE,
             "ENGINE_UNAVAILABLE",
-            "Moteur indisponible.",
+            "Market engine unavailable.",
         ),
     };
     error(status, code, message.into(), vec![])

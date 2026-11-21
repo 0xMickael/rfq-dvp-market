@@ -71,9 +71,9 @@ struct Error {
 pub(super) fn rejections(items: Vec<MakerRejection>) -> Vec<Rejection> {
     items.into_iter().map(|item| {
         let (code, message) = match item.reason {
-            RejectionReason::BelowMinimumAmount => ("BELOW_MINIMUM_AMOUNT", "Montant arrondi à zéro.".to_owned()),
-            RejectionReason::AmountOutOfRange => ("AMOUNT_OUT_OF_RANGE", "Montant hors limites.".to_owned()),
-            RejectionReason::InsufficientInventory { asset, required, available } => ("INSUFFICIENT_INVENTORY", format!("Inventaire {asset:?} insuffisant : {required} requis, {available} disponible.")),
+            RejectionReason::BelowMinimumAmount => ("BELOW_MINIMUM_AMOUNT", "Amount rounds to zero.".to_owned()),
+            RejectionReason::AmountOutOfRange => ("AMOUNT_OUT_OF_RANGE", "Amount out of range.".to_owned()),
+            RejectionReason::InsufficientInventory { asset, required, available } => ("INSUFFICIENT_INVENTORY", format!("Insufficient {asset:?} inventory: {required} required, {available} available.")),
         };
         Rejection { maker_id: item.maker_id, code, message }
     }).collect()
@@ -106,7 +106,7 @@ async fn quotes(
             Err(rejection) => return error(
                 rejection.status(),
                 "INVALID_REQUEST",
-                "Corps JSON invalide : side BUY/SELL, unit tBILL/sEUR et amount en chaîne requis."
+                "Invalid JSON: side BUY/SELL, unit tBILL/sEUR and a string amount are required."
                     .into(),
                 vec![],
             ),
@@ -139,7 +139,7 @@ async fn quotes(
         Err(EngineError::Market(MarketError::NoExecutableQuote(items))) => error(
             StatusCode::UNPROCESSABLE_ENTITY,
             "NO_EXECUTABLE_QUOTE",
-            "Aucun MM ne peut servir la demande entière.".into(),
+            "No market maker can fill the entire request.".into(),
             items,
         ),
         Err(EngineError::Market(err)) => error(

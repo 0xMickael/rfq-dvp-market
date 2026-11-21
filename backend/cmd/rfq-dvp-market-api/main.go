@@ -20,10 +20,10 @@ import (
 func main() {
 	printIdentity := flag.Bool("print-market-id", false, "Print chain/deployment identity without starting services")
 	runWorker := flag.Bool("settlement-worker", true, "Process settlement jobs; false keeps the durable queue paused")
-	deployment := flag.String("deployment", "", "JSON de déploiement Anvil ; active les signers MM publics de démonstration")
-	rpcURL := flag.String("rpc", "", "RPC Anvil local ; active la soumission et le suivi du settlement")
-	address := flag.String("listen", "127.0.0.1:8080", "Adresse HTTP locale")
-	engineURL := flag.String("engine", "http://127.0.0.1:8081", "URL du moteur Rust")
+	deployment := flag.String("deployment", "", "Anvil deployment JSON; enables publicly known demo MM signers")
+	rpcURL := flag.String("rpc", "", "Local Anvil RPC; enables settlement submission and tracking")
+	address := flag.String("listen", "127.0.0.1:8080", "Local HTTP listen address")
+	engineURL := flag.String("engine", "http://127.0.0.1:8081", "Rust engine URL")
 	flag.Parse()
 	if os.Getenv("DATABASE_URL") != "" && (*rpcURL == "" || *deployment == "") && !*printIdentity {
 		slog.Error("durable mode requires -rpc and -deployment")
@@ -80,12 +80,12 @@ func main() {
 			}
 		}
 		if err != nil {
-			slog.Error("configuration de signature invalide", "error", err)
+			slog.Error("invalid signing configuration", "error", err)
 			os.Exit(1)
 		}
 	}
 	if *rpcURL != "" && signer == nil {
-		slog.Error("-rpc exige -deployment")
+		slog.Error("-rpc requires -deployment")
 		os.Exit(1)
 	}
 	server := &http.Server{
@@ -103,9 +103,9 @@ func main() {
 		_ = server.Shutdown(shutdown)
 	}()
 
-	slog.Info("démarrage de l'API rfq-dvp-market", "address", server.Addr)
+	slog.Info("starting rfq-dvp-market API", "address", server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		slog.Error("arrêt du serveur HTTP", "error", err)
+		slog.Error("HTTP server stopped", "error", err)
 		os.Exit(1)
 	}
 }

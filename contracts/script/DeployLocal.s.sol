@@ -7,7 +7,7 @@ import {TBILL} from "../src/TBILL.sol";
 import {DvPSettlement} from "../src/DvPSettlement.sol";
 
 contract DeployLocal is Script {
-    // Mnemonic public par défaut d'Anvil, exclusivement pour une chaîne locale jetable.
+    // Public default Anvil mnemonic, exclusively for local demonstration and test chains.
     string constant MNEMONIC = "test test test test test test test test test test test junk";
 
     function run() external {
@@ -41,7 +41,7 @@ contract DeployLocal is Script {
         vm.serializeAddress("deployment", "submitter", vm.addr(vm.deriveKey(MNEMONIC, 5)));
         string memory json = vm.serializeUint("deployment", "chainId", block.chainid);
         vm.createDir("deployments", true);
-        // Les tests utilisent un manifeste distinct de la session interactive.
+        // Tests use a manifest separate from the interactive session.
         vm.writeJson(json, vm.envOr("DEPLOYMENT_FILE", string("deployments/31337.json")));
     }
 }

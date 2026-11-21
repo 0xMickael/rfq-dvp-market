@@ -23,7 +23,7 @@ func TestQuotesPreserveAmountsAndRefusals(t *testing.T) {
 			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				body, _ := io.ReadAll(r.Body)
 				if r.Method != "POST" || r.URL.Path != "/quotes" || string(body) != input {
-					t.Errorf("requête altérée : %s", body)
+					t.Errorf("altered request: %s", body)
 				}
 				w.WriteHeader(status)
 				_, _ = w.Write([]byte(`{"message":"fixture","rejections":[]}`))
@@ -39,13 +39,13 @@ func TestQuotesPreserveAmountsAndRefusals(t *testing.T) {
 }
 
 func TestInvalidRequestsNeverCallEngine(t *testing.T) {
-	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("appel inattendu") }))
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("unexpected call") }))
 	defer upstream.Close()
 	for _, body := range []string{`{}`, `null`, `{"side":"BUY","unit":"tBILL","amount":100}`, `{"side":"OTHER","unit":"tBILL","amount":"1"}`, `{"side":"BUY","unit":"tBILL","amount":"1","extra":true}`, `{"side":"BUY","unit":"tBILL","amount":"1"}{}`, strings.Repeat("x", 5000)} {
 		response := httptest.NewRecorder()
 		Handler(engine.NewClient(upstream.URL)).ServeHTTP(response, quoteRequest(body))
 		if response.Code != 400 {
-			t.Fatalf("status %d pour %s", response.Code, body)
+			t.Fatalf("status %d for %s", response.Code, body)
 		}
 	}
 }

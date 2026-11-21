@@ -36,7 +36,7 @@ pub enum RfqStatus {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Rfq {
     pub rfq_id: String,
-    /// Identité déclarative locale, sans preuve de contrôle d'un wallet.
+    /// Declared local identity, without proof of wallet ownership.
     pub trader_id: String,
     pub request: QuoteRequest,
     pub created_at: u64,
@@ -48,7 +48,7 @@ pub struct Rfq {
     pub trade: Option<Trade>,
 }
 
-/// Uniquement une réservation interne. Aucune signature ni autorisation on-chain.
+/// Internal reservation only; it provides no signature or on-chain authorization.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Trade {
     pub status: TradeStatus,
@@ -195,7 +195,7 @@ impl Engine {
         clock: impl Fn() -> u64 + Send + Sync + 'static,
     ) -> Result<Self, EngineError> {
         if timing.quote_seconds == 0 || timing.settlement_seconds <= timing.quote_seconds {
-            return Err(MarketError::InvalidConfiguration("échéances invalides").into());
+            return Err(MarketError::InvalidConfiguration("invalid deadlines").into());
         }
         let mut nonce = [0u8; 16];
         getrandom::fill(&mut nonce).map_err(|_| EngineError::Unavailable)?;
@@ -215,7 +215,7 @@ impl Engine {
         })
     }
 
-    // Échantillonné après acquisition du verrou. Un recul de l'horloge ne rouvre pas une quote.
+    // Sample after acquiring the lock; clock rollback must not reopen a quote.
     fn now(&self, state: &mut State) -> u64 {
         state.last_now = state.last_now.max((self.clock)());
         state.last_now
@@ -417,7 +417,7 @@ impl Engine {
             reserved_asset: asset,
             reserved_amount: required,
         };
-        // Tous les refus possibles précèdent ces écritures, invisibles avant libération du verrou.
+        // All business checks precede these writes, which remain hidden until the lock is released.
         let maker = &mut state.market.makers[maker_index];
         match asset {
             Asset::Tbill => maker.reserved.tbill = Amount::from_atoms(new_reserved),
@@ -426,14 +426,14 @@ impl Engine {
         let stored = state
             .rfqs
             .get_mut(rfq_id)
-            .expect("RFQ vérifiée sous le même verrou");
+            .expect("RFQ verified under the same lock");
         stored.status = RfqStatus::Accepted;
         stored.trade = Some(trade.clone());
         Self::checkpoint(&mut state)?;
         Ok(trade)
     }
 
-    // Go vérifie la preuve RPC ; cette route interne lui fait confiance.
+    // Go verifies the RPC evidence; this internal endpoint trusts it.
     pub fn settlement(
         &self,
         rfq_id: &str,
@@ -531,7 +531,7 @@ impl Engine {
         state
             .rfqs
             .get_mut(rfq_id)
-            .expect("RFQ vérifiée sous verrou")
+            .expect("RFQ verified under lock")
             .trade = Some(trade.clone());
         Self::checkpoint(&mut state)?;
         if status == TradeStatus::Settled

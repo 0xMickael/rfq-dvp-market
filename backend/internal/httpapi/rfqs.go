@@ -53,13 +53,13 @@ func fail(w http.ResponseWriter, status int, code, message string) {
 func decode(w http.ResponseWriter, r *http.Request, target any) bool {
 	media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil || media != "application/json" {
-		fail(w, 415, "INVALID_REQUEST", "Content-Type application/json requis.")
+		fail(w, 415, "INVALID_REQUEST", "Content-Type application/json is required.")
 		return false
 	}
 	d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
 	d.DisallowUnknownFields()
 	if d.Decode(target) != nil || d.Decode(new(any)) != io.EOF {
-		fail(w, 400, "INVALID_REQUEST", "Corps JSON invalide.")
+		fail(w, 400, "INVALID_REQUEST", "Invalid JSON body.")
 		return false
 	}
 	return true
@@ -76,7 +76,7 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 	enabled := func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			if s == nil {
-				fail(w, 503, "SIGNING_DISABLED", "Démarrer Go avec -deployment pour activer les signatures Anvil.")
+				fail(w, 503, "SIGNING_DISABLED", "Start Go with -deployment to enable Anvil signing.")
 				return
 			}
 			next(w, r)
@@ -102,12 +102,12 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 		}
 		trader, err := signing.Address(input.TraderID)
 		if err != nil || (input.Side != "BUY" && input.Side != "SELL") || (input.Unit != "tBILL" && input.Unit != "sEUR") || input.Amount == "" {
-			fail(w, 400, "INVALID_REQUEST", "Wallet, side, unité et montant valides requis.")
+			fail(w, 400, "INVALID_REQUEST", "A valid wallet, side, unit and amount are required.")
 			return
 		}
 		for _, id := range []string{"MM1", "MM2", "MM3"} {
 			if strings.EqualFold(trader, s.config.Maker(id)) {
-				fail(w, 400, "INVALID_TRADER", "Utiliser un wallet distinct des MM de démonstration.")
+				fail(w, 400, "INVALID_TRADER", "Use a wallet distinct from the demo market makers.")
 				return
 			}
 		}
@@ -130,7 +130,7 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 			return
 		}
 		if rfq.Status != "QUOTED" || uint64(s.now().Unix()) >= rfq.QuoteExpiresAt {
-			fail(w, 410, "QUOTE_UNAVAILABLE", "RFQ expirée ou déjà acceptée.")
+			fail(w, 410, "QUOTE_UNAVAILABLE", "RFQ expired or already accepted.")
 			return
 		}
 		data, err := signing.Typed(s.config, rfq, q)
@@ -148,11 +148,11 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 				return
 			}
 		}
-		fail(w, 404, "UNKNOWN_SETTLEMENT", "Settlement inconnu dans cette session Go.")
+		fail(w, 404, "UNKNOWN_SETTLEMENT", "Unknown settlement job.")
 	}))
 	mux.HandleFunc("GET /api/balances/{account}", enabled(func(w http.ResponseWriter, r *http.Request) {
 		if s.Settlement == nil {
-			fail(w, 503, "SETTLEMENT_DISABLED", "Activer -rpc pour lire Anvil.")
+			fail(w, 503, "SETTLEMENT_DISABLED", "Enable -rpc to read Anvil balances.")
 			return
 		}
 		if _, err := signing.Address(r.PathValue("account")); err != nil {
@@ -171,7 +171,7 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 func (s *SigningService) call(w http.ResponseWriter, r *http.Request, method, path string, input, out any) bool {
 	status, body, err := s.client.Call(r.Context(), method, path, input)
 	if err != nil {
-		fail(w, 503, "ENGINE_UNAVAILABLE", "Moteur indisponible. Une acceptation peut avoir réservé malgré la réponse perdue ; conserver la signature et réessayer.")
+		fail(w, 503, "ENGINE_UNAVAILABLE", "Engine unavailable. Acceptance may have reserved inventory despite a lost response; keep the signature and retry.")
 		return false
 	}
 	if status != 200 && status != 201 {
@@ -182,7 +182,7 @@ func (s *SigningService) call(w http.ResponseWriter, r *http.Request, method, pa
 		return false
 	}
 	if err := json.Unmarshal(body, out); err != nil {
-		fail(w, 502, "INVALID_ENGINE_RESPONSE", "Réponse moteur invalide.")
+		fail(w, 502, "INVALID_ENGINE_RESPONSE", "Invalid engine response.")
 		return false
 	}
 	return true
@@ -194,7 +194,7 @@ func (s *SigningService) load(w http.ResponseWriter, r *http.Request, quoteID st
 		return rfq, engine.Quote{}, false
 	}
 	if rfq.RfqID != r.PathValue("id") {
-		fail(w, 502, "INVALID_ENGINE_RESPONSE", "RFQ incohérente.")
+		fail(w, 502, "INVALID_ENGINE_RESPONSE", "Inconsistent RFQ.")
 		return rfq, engine.Quote{}, false
 	}
 	for _, q := range rfq.Quotes {
@@ -202,7 +202,7 @@ func (s *SigningService) load(w http.ResponseWriter, r *http.Request, quoteID st
 			return rfq, q, true
 		}
 	}
-	fail(w, 404, "UNKNOWN_QUOTE", "Quote inconnue pour cette RFQ.")
+	fail(w, 404, "UNKNOWN_QUOTE", "Unknown quote for this RFQ.")
 	return rfq, engine.Quote{}, false
 }
 
@@ -212,7 +212,7 @@ func checkReservation(r engine.Rfq, q engine.Quote, t engine.Trade) error {
 		asset, amount = "sEUR", q.Cash
 	}
 	if t.Status != "RESERVED" || t.TradeID != q.TradeID || t.RfqID != r.RfqID || t.TraderID != r.TraderID || t.Quote != q || t.QuoteExpiresAt != r.QuoteExpiresAt || t.SettlementDeadline != r.SettlementDeadline || t.ReservedAsset != asset || t.ReservedAmount != amount || t.AcceptedAt < r.CreatedAt || t.AcceptedAt >= r.QuoteExpiresAt {
-		return fmt.Errorf("réservation différente des termes signés")
+		return fmt.Errorf("reservation differs from signed terms")
 	}
 	return nil
 }
@@ -250,7 +250,7 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if input.TradeID != q.TradeID {
-		fail(w, 409, "WRONG_TRADE_ID", "Le tradeId ne correspond plus à la quote.")
+		fail(w, 409, "WRONG_TRADE_ID", "The tradeId does not match the quote.")
 		return
 	}
 	data, err := signing.Typed(s.config, rfq, q)
@@ -269,7 +269,7 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if uint64(s.now().Unix()) >= rfq.SettlementDeadline {
-		fail(w, 410, "SETTLEMENT_DEADLINE", "Deadline de settlement atteinte ; aucune signature MM émise.")
+		fail(w, 410, "SETTLEMENT_DEADLINE", "Settlement deadline reached; no MM signature issued.")
 		return
 	}
 	if s.Store != nil {
@@ -283,7 +283,7 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 		trade = *rfq.Trade
 	} else {
 		if rfq.Status != "QUOTED" {
-			fail(w, 410, "QUOTE_EXPIRED", "La quote a expiré avant réception de la signature. Demander de nouvelles quotes.")
+			fail(w, 410, "QUOTE_EXPIRED", "The quote expired before the signature arrived; request new quotes.")
 			return
 		}
 		payload := map[string]string{"trader_id": rfq.TraderID, "quote_id": q.QuoteID, "trade_id": q.TradeID}
@@ -297,12 +297,12 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if uint64(s.now().Unix()) >= rfq.SettlementDeadline {
-		fail(w, 410, "SETTLEMENT_DEADLINE", "Deadline atteinte après réservation ; réservation conservée.")
+		fail(w, 410, "SETTLEMENT_DEADLINE", "Deadline reached after reservation; inventory remains reserved.")
 		return
 	}
 	mmSignature, err := signing.Sign(data, s.keys[q.MakerID])
 	if err != nil {
-		fail(w, 500, "SIGNING_FAILED", "Signature MM indisponible ; réservation conservée.")
+		fail(w, 500, "SIGNING_FAILED", "MM signing unavailable; inventory remains reserved.")
 		return
 	}
 	traderSignature := signing.CanonicalSignature(input.Signature)

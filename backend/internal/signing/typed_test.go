@@ -50,18 +50,18 @@ func TestSolidityCastFixtureAndAllTermsAreBound(t *testing.T) {
 			modified.Message[field] = "1"
 		}
 		if Verify(modified, sigs["buyerSignature"], data.Message["buyer"].(string)) == nil {
-			t.Fatalf("altération acceptée: %s", field)
+			t.Fatalf("altered field accepted: %s", field)
 		}
 	}
 	modified, _ := fixture(t)
 	modified.Domain.VerifyingContract = "0x0000000000000000000000000000000000004444"
 	if Verify(modified, sigs["buyerSignature"], data.Message["buyer"].(string)) == nil {
-		t.Fatal("mauvais domaine accepté")
+		t.Fatal("incorrect domain accepted")
 	}
 	modified, _ = fixture(t)
 	modified.Domain.ChainId = ethmath.NewHexOrDecimal256(1)
 	if Verify(modified, sigs["buyerSignature"], data.Message["buyer"].(string)) == nil {
-		t.Fatal("mauvaise chaîne acceptée")
+		t.Fatal("incorrect chain accepted")
 	}
 }
 
@@ -83,7 +83,7 @@ func TestConstructedTermsMatchFixtureAndSellDirection(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.EqualFold(got.Message["seller"].(string), r.TraderID) || !strings.EqualFold(got.Message["buyer"].(string), config.MM2) {
-		t.Fatal("orientation SELL incorrecte")
+		t.Fatal("incorrect SELL direction")
 	}
 	key, _ := crypto.HexToECDSA(strings.Repeat("0", 59) + "a11ce")
 	sig, err := Sign(got, key)
@@ -96,16 +96,16 @@ func TestConstructedTermsMatchFixtureAndSellDirection(t *testing.T) {
 	q.Cash = "9007199254.740993"
 	got, err = Typed(config, r, q)
 	if err != nil || got.Message["cashAmount"] != "9007199254740993" {
-		t.Fatal("précision perdue", err)
+		t.Fatal("precision lost", err)
 	}
 	for _, bad := range []string{"-1.000000", "1.0000001", "1e3", "0.000000", "18446744073709.551616"} {
 		if _, err := atoms(bad); err == nil {
-			t.Fatal("montant invalide accepté", bad)
+			t.Fatal("invalid amount accepted", bad)
 		}
 	}
 	for _, sig := range []string{"", "0x01", "0x" + strings.Repeat("00", 65)} {
 		if Verify(data, sig, r.TraderID) == nil {
-			t.Fatal("signature invalide acceptée")
+			t.Fatal("invalid signature accepted")
 		}
 	}
 }

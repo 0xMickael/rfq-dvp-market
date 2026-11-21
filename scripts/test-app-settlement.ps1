@@ -20,7 +20,7 @@ $logs = Join-Path $root ('.cache/integration/' + $Scenario.ToLowerInvariant() + 
 
 function Assert-Alive {
     foreach ($p in $processes) {
-        if ($p.HasExited) { throw "Service arrete (PID $($p.Id), code $($p.ExitCode)). Logs : $logs" }
+        if ($p.HasExited) { throw "Service exited (PID $($p.Id), exit code $($p.ExitCode)). Logs: $logs" }
     }
 }
 function Start-TestProcess([string]$Name, [string]$File, [string[]]$Arguments, [string]$Directory) {
@@ -44,35 +44,35 @@ function Wait-TestReady([string]$Name, [scriptblock]$Check) {
         try { if (& $Check) { Assert-Alive; return } } catch { }
         Start-Sleep -Milliseconds 200
     } while ([DateTime]::UtcNow -lt $deadline)
-    throw "$Name indisponible. Logs : $logs"
+    throw "$Name unavailable. Logs: $logs"
 }
 function Invoke-TestClient([string]$File) {
     $client = Start-TestProcess 'client' (Get-Command node).Source @($File) $root
     # A regression must not leave the integration waiting indefinitely.
-    if (-not $client.WaitForExit(120000)) { throw "Client de test bloque. Logs : $logs" }
+    if (-not $client.WaitForExit(120000)) { throw "Test client timed out. Logs: $logs" }
     $processes.Remove($client) | Out-Null
     $code = $client.ExitCode
     $client.Dispose()
     Get-Content -LiteralPath (Join-Path $logs 'client.out.log') -Encoding UTF8
     if ($code -ne 0) {
         Get-Content -LiteralPath (Join-Path $logs 'client.err.log') -Encoding UTF8
-        throw "Integration $Scenario echouee (code $code). Logs : $logs"
+        throw "Integration $Scenario failed (exit code $code). Logs: $logs"
     }
 }
 try {
     $env:DATABASE_URL=$null; $env:MARKET_ID=$null; $env:RFQ_TEST_MODE=$null; $env:RFQ_TEST_FAILPOINT=$null
     $env:Path += ';' + [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
     foreach ($file in @($ApiBinary,$EngineBinary,(Join-Path $WebDist 'index.html'),(Join-Path $root 'web/.test-dist/terms.js'))) {
-        if (-not (Test-Path -LiteralPath $file)) { throw "Build absent : $file. Lance scripts/verify.ps1." }
+        if (-not (Test-Path -LiteralPath $file)) { throw "Missing build: $file. Run scripts/verify.ps1." }
     }
     foreach ($port in @(18545,18080,18081,15173)) {
         $probe = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$port)
         try { $probe.Server.ExclusiveAddressUse = $true; $probe.Start() }
-        catch { throw "Port $port occupe : aucun service existant ne sera arrete." }
+        catch { throw "Port $port is busy; existing services will not be stopped." }
         finally { $probe.Stop() }
     }
     New-Item -ItemType Directory -Path $logs -Force | Out-Null
-    Write-Host "Integration $Scenario. Logs : $logs"
+    Write-Host "Integration $Scenario. Logs: $logs"
     $env:FOUNDRY_BROADCAST = Join-Path $logs 'broadcast'
     $env:FOUNDRY_CACHE_PATH = Join-Path $logs 'forge-cache'
     $env:DEPLOYMENT_FILE = (Join-Path $logs 'deployment.json').Replace('\','/')
@@ -85,7 +85,7 @@ try {
         Push-Location (Join-Path $root 'contracts')
         try {
             & forge script script/DeployLocal.s.sol:DeployLocal --rpc-url http://127.0.0.1:18545 --broadcast --non-interactive
-            if ($LASTEXITCODE -ne 0) { throw 'Deploiement de test echoue.' }
+            if ($LASTEXITCODE -ne 0) { throw 'Test deployment failed.' }
         } finally { Pop-Location }
         $deployment = $env:DEPLOYMENT_FILE
     }

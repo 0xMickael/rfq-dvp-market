@@ -7,9 +7,9 @@ export async function readWallet(provider: Eip1193Provider) {
 
 export function walletError(error: unknown): string {
   const code = (error as { code?: number } | null)?.code;
-  if (code === 4001) return 'Demande refusée dans le wallet. Cliquer à nouveau pour réessayer.';
-  if (code === -32002) return 'Une demande est déjà ouverte dans MetaMask. Ouvrir l’extension pour la terminer.';
-  if (code === 4900 || code === 4901) return 'Wallet déconnecté du réseau. Vérifier qu’Anvil est démarré sur http://127.0.0.1:8545.';
+  if (code === 4001) return 'Request rejected in the wallet. Click again to retry.';
+  if (code === -32002) return 'A request is already open in MetaMask. Open the extension to complete it.';
+  if (code === 4900 || code === 4901) return 'Wallet disconnected. Check that Anvil is running at http://127.0.0.1:8545.';
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -33,7 +33,7 @@ export async function connectWallet(provider: Eip1193Provider, chainId: number):
 
 export async function checkWallet(provider: Eip1193Provider, account: string, chainId: number): Promise<void> {
   const selected = await readWallet(provider);
-  if (!selected.account) throw new Error('Aucun compte autorisé. Déverrouiller MetaMask et connecter le compte au site.');
-  if (selected.account.toLowerCase() !== account.toLowerCase()) throw new Error('Le compte sélectionné a changé. Revenir au compte ayant demandé cette quote.');
-  if (selected.chainId !== BigInt(chainId)) throw new Error(`Réseau ${selected.chainId} sélectionné ; Anvil ${chainId} attendu. Cliquer sur « Passer sur Anvil ».`);
+  if (!selected.account) throw new Error('No authorized account. Unlock MetaMask and connect the account to this site.');
+  if (selected.account.toLowerCase() !== account.toLowerCase()) throw new Error('The selected account changed. Switch back to the account that requested this quote.');
+  if (selected.chainId !== BigInt(chainId)) throw new Error(`Selected network ${selected.chainId}; expected Anvil ${chainId}. Click Switch to Anvil.`);
 }

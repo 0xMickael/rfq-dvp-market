@@ -10,7 +10,7 @@ func TestHealth(t *testing.T) {
 	response := httptest.NewRecorder()
 	NewHandler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
 	if response.Code != http.StatusOK {
-		t.Fatalf("status = %d, attendu 200", response.Code)
+		t.Fatalf("status = %d, expected 200", response.Code)
 	}
 	if got := response.Header().Get("Content-Type"); got != "application/json" {
 		t.Fatalf("content-type = %q", got)
@@ -33,7 +33,7 @@ func TestUnsupportedRoutes(t *testing.T) {
 			response := httptest.NewRecorder()
 			NewHandler().ServeHTTP(response, httptest.NewRequest(tc.method, tc.path, nil))
 			if response.Code != tc.status {
-				t.Fatalf("status = %d, attendu %d", response.Code, tc.status)
+				t.Fatalf("status = %d, expected %d", response.Code, tc.status)
 			}
 		})
 	}

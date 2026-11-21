@@ -55,4 +55,4 @@ for (const side of ['BUY', 'SELL']) {
   assert.equal(results.filter(r => r.status === 409 && r.body.code === 'INSUFFICIENT_INVENTORY').length, 1);
   for (const [i, result] of results.entries()) if (result.status === 200) verify(result, prepared[i].data);
 }
-console.log('OK : Vite -> Go -> Rust, quatre modes signés, signatures ethers/Go, refus avant réservation, retry et concurrence BUY/SELL. Aucune transaction soumise.');
+console.log('OK: Vite -> Go -> Rust, four signed modes, ethers/Go signatures, rejection before reservation, retry and concurrent BUY/SELL. No transaction submitted.');

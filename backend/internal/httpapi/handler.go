@@ -24,7 +24,7 @@ func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 		status, body, err := client.Call(r.Context(), "GET", "/market", nil)
 		if err != nil {
 			w.WriteHeader(503)
-			_ = json.NewEncoder(w).Encode(map[string]string{"message": "Marche indisponible"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"message": "Market unavailable"})
 			return
 		}
 		w.WriteHeader(status)
@@ -43,23 +43,23 @@ func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 		}
 		media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if err != nil || media != "application/json" {
-			fail(415, "INVALID_REQUEST", "Content-Type application/json requis.")
+			fail(415, "INVALID_REQUEST", "Content-Type application/json is required.")
 			return
 		}
 		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
 		decoder.DisallowUnknownFields()
 		var input engine.Request
 		if err := decoder.Decode(&input); err != nil {
-			fail(400, "INVALID_REQUEST", "Corps JSON invalide.")
+			fail(400, "INVALID_REQUEST", "Invalid JSON body.")
 			return
 		}
 		if decoder.Decode(new(any)) != io.EOF || (input.Side != "BUY" && input.Side != "SELL") || (input.Unit != "tBILL" && input.Unit != "sEUR") || input.Amount == "" {
-			fail(400, "INVALID_REQUEST", "side BUY/SELL, unit tBILL/sEUR et amount en chaîne requis.")
+			fail(400, "INVALID_REQUEST", "side BUY/SELL, unit tBILL/sEUR and a string amount are required.")
 			return
 		}
 		status, body, err := client.Quote(r.Context(), input)
 		if err != nil {
-			fail(503, "ENGINE_UNAVAILABLE", "Moteur de cotation indisponible. Réessayez.")
+			fail(503, "ENGINE_UNAVAILABLE", "Quoting engine unavailable; try again.")
 			return
 		}
 		w.WriteHeader(status)

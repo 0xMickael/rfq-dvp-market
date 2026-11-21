@@ -22,7 +22,7 @@ $ownsLock = $false
 
 function Assert-Processes {
     foreach ($p in $processes) {
-        if ($p.HasExited) { throw "Un service s'est arrete (PID $($p.Id), code $($p.ExitCode)). Logs : $logs" }
+        if ($p.HasExited) { throw "A service exited (PID $($p.Id), exit code $($p.ExitCode)). Logs: $logs" }
     }
 }
 
@@ -32,7 +32,7 @@ function Assert-Ports {
         try {
             $probe.Server.ExclusiveAddressUse = $true
             $probe.Start()
-        } catch { throw "Port $port occupe : arrete le service concerne avant de relancer. Aucun processus existant ne sera arrete." }
+        } catch { throw "Port $port is busy. Stop that service before retrying; existing processes will not be stopped." }
         finally { $probe.Stop() }
     }
 }
@@ -41,7 +41,7 @@ function Invoke-Build([string]$Directory, [string]$Command, [string[]]$Arguments
     Push-Location (Join-Path $root $Directory)
     try {
         & $Command @Arguments
-        if ($LASTEXITCODE -ne 0) { throw "Echec de $Command (code $LASTEXITCODE)." }
+        if ($LASTEXITCODE -ne 0) { throw "$Command failed (exit code $LASTEXITCODE)." }
     } finally { Pop-Location }
 }
 
@@ -66,7 +66,7 @@ function Wait-Ready([string]$Name, [scriptblock]$Check) {
         try { if (& $Check) { Assert-Processes; return } } catch { }
         Start-Sleep -Milliseconds 300
     } while ([DateTime]::UtcNow -lt $deadline)
-    throw "$Name indisponible apres 60 secondes. Logs : $logs"
+    throw "$Name unavailable after 60 seconds. Logs: $logs"
 }
 
 try {
@@ -74,25 +74,25 @@ try {
     $env:DATABASE_URL=$null; $env:MARKET_ID=$null; $env:RFQ_TEST_MODE=$null; $env:RFQ_TEST_FAILPOINT=$null
     try { $ownsLock = $lock.WaitOne(0) }
     catch [System.Threading.AbandonedMutexException] { $ownsLock = $true }
-    if (-not $ownsLock) { throw 'Une autre session demo.ps1 est deja en cours.' }
+    if (-not $ownsLock) { throw 'Another demo.ps1 session is already running.' }
 
     # Pick up tools installed since VS Code started, without changing the saved PATH.
     $env:Path = $oldPath + ';' + [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
     $tools = @{}
     foreach ($name in @('anvil', 'forge', 'cargo', 'go', 'node', 'npm.cmd')) {
         $command = Get-Command $name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $command) { throw "Outil manquant : $name. Voir docs/development.md." }
+        if (-not $command) { throw "Missing tool: $name. See docs/development.md." }
         $tools[$name] = $command.Source
     }
     foreach ($file in @('contracts/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol', 'contracts/lib/forge-std/src/Script.sol', 'web/node_modules/vite/bin/vite.js', 'web/node_modules/typescript/bin/tsc')) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $file))) {
-            throw "Dependance absente : $file. Suis la premiere installation dans docs/development.md."
+            throw "Missing dependency: $file. Follow the setup instructions in docs/development.md."
         }
     }
     Assert-Ports
     $logs = Join-Path $root ('.cache/demo/' + [DateTime]::Now.ToString('yyyyMMdd-HHmmss') + '-' + $PID)
     New-Item -ItemType Directory -Force -Path $logs | Out-Null
-    Write-Host "Compilation et preparation de la demo. Logs : $logs"
+    Write-Host "Building and preparing the demo. Logs: $logs"
     Invoke-Build 'market-engine' $tools.cargo @('build', '--locked', '--target-dir', '../.cache/stage1-rust')
     Invoke-Build 'backend' $tools.go @('build', '-o', '../.cache/demo-api.exe', './cmd/rfq-dvp-market-api')
     Invoke-Build 'contracts' $tools.forge @('build')
@@ -122,11 +122,11 @@ try {
     Wait-Ready 'Frontend' { (Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:5173' -TimeoutSec 2).StatusCode -eq 200 }
     Wait-Ready 'API via frontend' { (Invoke-RestMethod 'http://127.0.0.1:5173/api/config' -TimeoutSec 2).settlement_enabled -eq $true }
     $book = Invoke-RestMethod 'http://127.0.0.1:5173/api/quotes' -Method Post -ContentType 'application/json' -Body '{"side":"BUY","unit":"tBILL","amount":"100"}' -TimeoutSec 5
-    if ($book.quotes.Count -ne 3) { throw 'Verification de cotation echouee.' }
-    Write-Host "`nDEMO PRETE : http://127.0.0.1:5173"
-    Write-Host 'MetaMask : Anvil 31337, compte trader 0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
-    Write-Host 'Nouvelle session : soldes reinitialises. Ferme les anciens onglets de demo.'
-    Write-Host 'Garde ce terminal ouvert. Ctrl+C arrete les quatre services.'
+    if ($book.quotes.Count -ne 3) { throw 'Quote smoke check failed.' }
+    Write-Host "`nDEMO READY: http://127.0.0.1:5173"
+    Write-Host 'MetaMask: Anvil 31337, trader account 0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
+    Write-Host 'New session: balances reset. Close tabs from previous demo sessions.'
+    Write-Host 'Keep this terminal open. Ctrl+C stops all four services.'
     $started = [DateTime]::UtcNow
     while ($RunSeconds -eq 0 -or ([DateTime]::UtcNow - $started).TotalSeconds -lt $RunSeconds) {
         Assert-Processes
@@ -136,7 +136,7 @@ try {
     for ($i = $processes.Count - 1; $i -ge 0; $i--) {
         $p = $processes[$i]
         try { if (-not $p.HasExited) { $p.Kill(); $p.WaitForExit() } }
-        catch { Write-Warning "Arret du processus $($p.Id) : $_" }
+        catch { Write-Warning "Stopping process $($p.Id): $_" }
         finally { $p.Dispose() }
     }
     if ($deploymentTouched) {
@@ -150,5 +150,5 @@ try {
     foreach($key in $savedDurability.Keys){[Environment]::SetEnvironmentVariable($key,$savedDurability[$key],'Process')}
     if ($ownsLock) { $lock.ReleaseMutex() }
     $lock.Dispose()
-    if ($processes.Count -gt 0) { Write-Host 'Session terminee. Services de la demo arretes.' }
+    if ($processes.Count -gt 0) { Write-Host 'Session ended. Demo services stopped.' }
 }

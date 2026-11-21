@@ -73,7 +73,7 @@ contract DvPSettlementTest is Test {
         emit DvPSettlement.TradeSettled(
             t.tradeId, t.buyer, t.seller, t.cashAmount, t.securityAmount
         );
-        vm.prank(address(0x1234)); // Le submitter n'est pas une contrepartie.
+        vm.prank(address(0x1234)); // The submitter is not a counterparty.
         dvp.settle(t, a, b);
         assertTrue(dvp.settled(t.buyer, t.seller, t.tradeId));
         assertEq(cash.balanceOf(t.buyer), buyerCash - t.cashAmount);
@@ -182,7 +182,7 @@ contract DvPSettlementTest is Test {
         assertFalse(dvp.settled(t.buyer, t.seller, t.tradeId));
         vm.prank(mm);
         security.approve(address(dvp), 100e6);
-        dvp.settle(t, a, b); // Les signatures restent utilisables après un revert.
+        dvp.settle(t, a, b); // Signatures remain usable after a revert.
         assertTrue(dvp.settled(t.buyer, t.seller, t.tradeId));
     }
 

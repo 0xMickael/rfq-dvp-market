@@ -269,7 +269,7 @@ fn cash_mode_rounding_bounds_hold_across_prices_and_amounts() {
                 let price = u128::from(price_atoms);
                 if side == Side::Buy && scaled_cash < price {
                     let MarketError::NoExecutableQuote(rejections) = result.unwrap_err() else {
-                        panic!("erreur attendue")
+                        panic!("expected error")
                     };
                     assert_eq!(rejections[0].reason, RejectionReason::BelowMinimumAmount);
                     continue;
@@ -285,7 +285,7 @@ fn cash_mode_rounding_bounds_hold_across_prices_and_amounts() {
                         assert!(paid >= exact_product && paid - exact_product < u128::from(SCALE));
                         assert!(
                             (quantity + 1) * price > scaled_cash,
-                            "le budget permettrait un atome supplémentaire"
+                            "the budget would allow one more atom"
                         );
                     }
                     Side::Sell => {
@@ -293,7 +293,7 @@ fn cash_mode_rounding_bounds_hold_across_prices_and_amounts() {
                         assert!(paid <= exact_product && exact_product - paid < u128::from(SCALE));
                         assert!(
                             (quantity - 1) * price < scaled_cash,
-                            "la cible serait atteinte avec un atome de moins"
+                            "the target would be reached with one less atom"
                         );
                     }
                 }
@@ -326,7 +326,7 @@ fn existing_reservations_reduce_availability_in_both_assets() {
         let MarketError::NoExecutableQuote(rejections) =
             market.quote(request(side, excessive, false)).unwrap_err()
         else {
-            panic!("refus attendu")
+            panic!("expected rejection")
         };
         let RejectionReason::InsufficientInventory {
             asset: actual_asset,
@@ -334,7 +334,7 @@ fn existing_reservations_reduce_availability_in_both_assets() {
             required,
         } = rejections[0].reason
         else {
-            panic!("inventaire insuffisant attendu")
+            panic!("expected insufficient inventory")
         };
         assert_eq!(actual_asset, asset);
         assert_eq!(actual_available, amount(available));
@@ -348,7 +348,7 @@ fn cash_target_uses_actual_rounded_payout_for_inventory_check() {
     let MarketError::NoExecutableQuote(rejections) =
         market.quote(request(Side::Sell, "10", true)).unwrap_err()
     else {
-        panic!("refus attendu")
+        panic!("expected rejection")
     };
     assert_eq!(
         rejections[0].reason,
@@ -386,7 +386,7 @@ fn liquidity_is_not_aggregated_across_market_makers() {
         let MarketError::NoExecutableQuote(rejections) =
             market.quote(request(side, "100", false)).unwrap_err()
         else {
-            panic!("refus attendu")
+            panic!("expected rejection")
         };
         assert_eq!(rejections.len(), 2);
     }
@@ -431,7 +431,7 @@ fn a_sell_that_would_pay_zero_cash_is_rejected() {
         .quote(request(Side::Sell, "0.000001", false))
         .unwrap_err()
     else {
-        panic!("refus attendu")
+        panic!("expected rejection")
     };
     assert_eq!(rejections[0].reason, RejectionReason::BelowMinimumAmount);
 }
@@ -458,7 +458,7 @@ fn overflowing_quote_amounts_are_errors_not_wrapping_values() {
                 .quote(QuoteRequest { side, amount: mode })
                 .unwrap_err()
             else {
-                panic!("refus attendu")
+                panic!("expected rejection")
             };
             assert_eq!(rejections[0].reason, RejectionReason::AmountOutOfRange);
         }

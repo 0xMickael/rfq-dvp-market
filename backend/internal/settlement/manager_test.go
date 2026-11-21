@@ -77,7 +77,7 @@ func (f *fakeEth) Call(args map[string]any, _ string) (hexutil.Bytes, error) {
 			return nil, err
 		}
 		value := *abiTerms(values[0])
-		// Le test compare le digest réel issu de la fixture au hash attendu par le worker.
+		// Compare the fixture digest with the hash expected by the worker.
 		data, err := signing.Typed(f.config, engine.Rfq{TraderID: value.Buyer.Hex(), QuoteExpiresAt: 120, SettlementDeadline: value.Deadline.Uint64()}, engine.Quote{TradeID: common.Hash(value.TradeId).Hex(), MakerID: "MM2", Side: "BUY", Cash: "98.000000", Quantity: "1.000000"})
 		if err != nil {
 			return nil, err
@@ -260,7 +260,7 @@ func TestLostResponseAfterInclusionDoesNotResubmit(t *testing.T) {
 	if m.step(context.Background(), j) == nil {
 		t.Fatal("expected response loss")
 	}
-	_ = m.step(context.Background(), j) // Première notification Rust perdue.
+	_ = m.step(context.Background(), j) // The first Rust notification response is lost.
 	if err := m.step(context.Background(), j); err != nil {
 		t.Fatal(err)
 	}
