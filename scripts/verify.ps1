@@ -1,10 +1,11 @@
 # Reproducible Windows checks. No global installation or source rewriting.
 [CmdletBinding()]
-param([switch]$SkipIntegration)
+param([switch]$SkipIntegration,[string]$RustTargetDirectory='')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot
 $run = Join-Path $root ('.cache/verification/' + [Guid]::NewGuid().ToString('N'))
 $target = Join-Path $root '.cache/verification-rust'
+if ($RustTargetDirectory) { $target = [IO.Path]::GetFullPath($RustTargetDirectory) }
 $oldPath = $env:Path
 $oldGoCache = $env:GOCACHE
 $steps = [System.Collections.Generic.List[object]]::new()
@@ -86,6 +87,9 @@ try {
             Run-Check "Integration $scenario : vrais processus via Vite" '.' {
                 & (Join-Path $PSScriptRoot 'test-app-settlement.ps1') -Scenario $scenario -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -WebDist (Join-Path $run 'web')
             }
+        }
+        Run-Check 'PostgreSQL recovery: real Go/Rust crashes on Anvil' '.' {
+            & (Join-Path $PSScriptRoot 'test-recovery.ps1') -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -RustTargetDirectory $target
         }
     }
     Run-Check 'Diff sans erreurs de whitespace' '.' { Invoke-Checked git @('diff','--check') }

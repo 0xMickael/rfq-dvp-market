@@ -12,6 +12,8 @@ $oldPath = $env:Path
 $oldEngineAddr = $env:ENGINE_ADDR
 $oldBroadcast = $env:FOUNDRY_BROADCAST
 $oldDeploymentFile = $env:DEPLOYMENT_FILE
+$savedDurability=@{}
+foreach($key in @('DATABASE_URL','MARKET_ID','RFQ_TEST_MODE','RFQ_TEST_FAILPOINT')){$savedDurability[$key]=[Environment]::GetEnvironmentVariable($key,'Process')}
 $deploymentPath = Join-Path $root 'contracts/deployments/31337.json'
 $deploymentTouched = $false
 $previousDeployment = $null
@@ -68,6 +70,8 @@ function Wait-Ready([string]$Name, [scriptblock]$Check) {
 }
 
 try {
+    Write-Host 'Ephemeral mode: use scripts/start.ps1 to preserve trades.'
+    $env:DATABASE_URL=$null; $env:MARKET_ID=$null; $env:RFQ_TEST_MODE=$null; $env:RFQ_TEST_FAILPOINT=$null
     try { $ownsLock = $lock.WaitOne(0) }
     catch [System.Threading.AbandonedMutexException] { $ownsLock = $true }
     if (-not $ownsLock) { throw 'Une autre session demo.ps1 est deja en cours.' }
@@ -143,6 +147,7 @@ try {
     $env:FOUNDRY_BROADCAST = $oldBroadcast
     $env:DEPLOYMENT_FILE = $oldDeploymentFile
     $env:Path = $oldPath
+    foreach($key in $savedDurability.Keys){[Environment]::SetEnvironmentVariable($key,$savedDurability[$key],'Process')}
     if ($ownsLock) { $lock.ReleaseMutex() }
     $lock.Dispose()
     if ($processes.Count -gt 0) { Write-Host 'Session terminee. Services de la demo arretes.' }

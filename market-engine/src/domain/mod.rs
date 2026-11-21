@@ -12,13 +12,13 @@ pub use engine::{
 pub use pricing::{Inventory, MarketMaker, Prices, ReferenceMarket};
 pub use quote::{Market, Quote, QuoteBook, QuoteRequest, RequestAmount, Side};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Asset {
     Tbill,
     Cash,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RejectionReason {
     BelowMinimumAmount,
     AmountOutOfRange,
@@ -29,7 +29,7 @@ pub enum RejectionReason {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct MakerRejection {
     pub maker_id: String,
     pub reason: RejectionReason,

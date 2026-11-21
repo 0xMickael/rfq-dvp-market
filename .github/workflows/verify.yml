@@ -53,6 +53,7 @@ jobs:
           npm.cmd ci --prefix web --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           ./contracts/install-deps.ps1
+          ./scripts/install-postgres.ps1
       - name: Run the same checks as locally
         run: ./scripts/verify.ps1
       - name: Retain diagnostic logs only
@@ -64,6 +65,8 @@ jobs:
             .cache/verification/**/*.log
             .cache/verification/**/summary.json
             .cache/integration/**/*.log
+            .cache/recovery/*/*.log
+            .cache/recovery/*/summary.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore

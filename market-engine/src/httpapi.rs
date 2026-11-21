@@ -130,7 +130,7 @@ async fn quotes(
         Unit::Tbill => RequestAmount::Tbill(amount),
         Unit::Cash => RequestAmount::Cash(amount),
     };
-    match market.indicative_quote(QuoteRequest { side, amount }) {
+    match crate::blocking(move || market.indicative_quote(QuoteRequest { side, amount })).await {
         Ok(book) => Json(Book {
             quotes: book.quotes.into_iter().map(Quote::from).collect(),
             rejections: rejections(book.rejections),

@@ -13,7 +13,7 @@ if (-not $EngineBinary) { $EngineBinary = Join-Path $root '.cache/stage1-rust/de
 if (-not $WebDist) { $WebDist = Join-Path $root 'web/dist' }
 $processes = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
 $saved = @{}
-foreach ($name in @('Path','ENGINE_ADDR','FOUNDRY_BROADCAST','FOUNDRY_CACHE_PATH','DEPLOYMENT_FILE','API_PROXY_TARGET','TEST_API_URL')) {
+foreach ($name in @('Path','ENGINE_ADDR','FOUNDRY_BROADCAST','FOUNDRY_CACHE_PATH','DEPLOYMENT_FILE','API_PROXY_TARGET','TEST_API_URL','DATABASE_URL','MARKET_ID','RFQ_TEST_MODE','RFQ_TEST_FAILPOINT')) {
     $saved[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
 }
 $logs = Join-Path $root ('.cache/integration/' + $Scenario.ToLowerInvariant() + '-' + [Guid]::NewGuid().ToString('N'))
@@ -60,6 +60,7 @@ function Invoke-TestClient([string]$File) {
     }
 }
 try {
+    $env:DATABASE_URL=$null; $env:MARKET_ID=$null; $env:RFQ_TEST_MODE=$null; $env:RFQ_TEST_FAILPOINT=$null
     $env:Path += ';' + [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
     foreach ($file in @($ApiBinary,$EngineBinary,(Join-Path $WebDist 'index.html'),(Join-Path $root 'web/.test-dist/terms.js'))) {
         if (-not (Test-Path -LiteralPath $file)) { throw "Build absent : $file. Lance scripts/verify.ps1." }

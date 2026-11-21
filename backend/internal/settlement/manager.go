@@ -19,7 +19,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"rfq-dvp-market.local/backend/internal/durable"
 	"rfq-dvp-market.local/backend/internal/engine"
+	"rfq-dvp-market.local/backend/internal/failpoint"
 	"rfq-dvp-market.local/backend/internal/signing"
 )
 
@@ -55,15 +57,18 @@ type Result struct {
 	Message         string `json:"message"`
 }
 type job struct {
-	trade  engine.Trade
-	terms  Terms
-	data   []byte
-	tx     *types.Transaction
-	result Result
+	observed *observation
+	trade    engine.Trade
+	terms    Terms
+	data     []byte
+	tx       *types.Transaction
+	result   Result
 }
 
 // Un seul worker attribue les nonces. Aucun appel réseau sous le mutex.
 type Manager struct {
+	workMu     sync.Mutex
+	store      *durable.Store
 	mu         sync.Mutex
 	jobs       map[string]*job
 	rpc        *ethclient.Client
@@ -96,7 +101,12 @@ func New(ctx context.Context, endpoint string, c signing.Config, e *engine.Clien
 	}
 	return m, nil
 }
-func (m *Manager) Close() { m.rpc.Close() }
+func (m *Manager) Close() {
+	m.rpc.Close()
+	if m.store != nil {
+		m.store.Close()
+	}
+}
 func (m *Manager) validate(ctx context.Context) error {
 	id, err := m.rpc.ChainID(ctx)
 	if err != nil {
@@ -154,14 +164,17 @@ func (m *Manager) Get(id string) (Result, bool) {
 	}
 	return j.result, true
 }
-func (m *Manager) set(j *job, status, hash, message string) {
+func (m *Manager) set(j *job, status, hash, message string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	j.result.Status = status
 	j.result.TransactionHash = hash
 	j.result.Message = message
+	return m.save(j)
 }
 func (m *Manager) Enqueue(t engine.Trade, data apitypes.TypedData, buyer, seller string) (Result, error) {
+	m.workMu.Lock()
+	defer m.workMu.Unlock()
 	if err := signing.Verify(data, buyer, data.Message["buyer"].(string)); err != nil {
 		return Result{}, err
 	}
@@ -179,7 +192,11 @@ func (m *Manager) Enqueue(t engine.Trade, data apitypes.TypedData, buyer, seller
 		return existing.result, nil
 	}
 	result := Result{TradeID: t.TradeID, Status: "SETTLEMENT_PENDING", Message: "Signatures vérifiées ; settlement en attente."}
-	m.jobs[t.TradeID] = &job{trade: t, terms: value, data: encoded, result: result}
+	j := &job{trade: t, terms: value, data: encoded, result: result}
+	if err := m.save(j); err != nil {
+		return Result{}, err
+	}
+	m.jobs[t.TradeID] = j
 	return result, nil
 }
 func (m *Manager) Run(ctx context.Context) {
@@ -213,6 +230,7 @@ func (m *Manager) Run(ctx context.Context) {
 		}
 	}
 }
+
 func (m *Manager) notify(ctx context.Context, j *job, status, hash string, timestamp uint64) error {
 	var txHash any
 	if hash != "" {
@@ -234,6 +252,16 @@ func (m *Manager) notify(ctx context.Context, j *job, status, hash string, times
 }
 
 func (m *Manager) step(ctx context.Context, j *job) error {
+	m.workMu.Lock()
+	defer m.workMu.Unlock()
+	if m.store != nil {
+		if err := m.store.Check(); err != nil {
+			return err
+		}
+	}
+	if j.observed != nil {
+		return m.finish(ctx, j)
+	}
 	header, err := m.rpc.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return err
@@ -269,11 +297,12 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 			if receipt.Status != types.ReceiptStatusSuccessful || receipt.BlockHash != block.Hash() || log.BlockHash != block.Hash() || log.Removed {
 				return fmt.Errorf("preuve non canonique")
 			}
-			if err := m.notify(ctx, j, "SETTLED", log.TxHash.Hex(), block.Time); err != nil {
+			j.observed = &observation{Status: "SETTLED", Hash: log.TxHash.Hex(), Timestamp: block.Time}
+			if err := m.save(j); err != nil {
 				return err
 			}
-			m.set(j, "SETTLED", log.TxHash.Hex(), "Échange confirmé sur Anvil ; inventaire comptabilisé.")
-			return nil
+			failpoint.Hit("after_inclusion")
+			return m.finish(ctx, j)
 		}
 		return fmt.Errorf("trade consommé sans événement vérifiable")
 	}
@@ -304,11 +333,11 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 		if j.tx != nil {
 			hash = j.tx.Hash().Hex()
 		}
-		if err := m.notify(ctx, j, "SETTLEMENT_FAILED", hash, header.Time); err != nil {
+		j.observed = &observation{Status: "SETTLEMENT_FAILED", Hash: hash, Timestamp: header.Time}
+		if err := m.save(j); err != nil {
 			return err
 		}
-		m.set(j, "SETTLEMENT_FAILED", hash, "Deadline atteinte sur Anvil sans règlement ; réservation libérée.")
-		return nil
+		return m.finish(ctx, j)
 	}
 	if j.tx == nil {
 		if err := m.notify(ctx, j, "SETTLEMENT_PENDING", "", 0); err != nil {
@@ -350,6 +379,10 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 			return err
 		}
 		j.tx = tx
+		if err := m.save(j); err != nil {
+			return err
+		}
+		failpoint.Hit("after_sign")
 		m.nonce++
 	}
 	hash := j.tx.Hash().Hex()
@@ -370,8 +403,8 @@ func (m *Manager) step(ctx context.Context, j *job) error {
 	if err := m.rpc.SendTransaction(ctx, j.tx); err != nil {
 		return fmt.Errorf("soumission RPC à vérifier : %w", err)
 	}
-	m.set(j, "SETTLEMENT_PENDING", hash, "Transaction soumise ; attente de confirmation.")
-	return nil
+	failpoint.Hit("after_send")
+	return m.set(j, "SETTLEMENT_PENDING", hash, "Transaction submitted; awaiting confirmation.")
 }
 func (m *Manager) Balances(ctx context.Context, account string) (map[string]string, error) {
 	address, err := signing.Address(account)
@@ -390,4 +423,15 @@ func (m *Manager) Balances(ctx context.Context, account string) (map[string]stri
 		balances[name] = fmt.Sprintf("%s.%06d", whole.String(), fraction.Uint64())
 	}
 	return balances, nil
+}
+
+func (m *Manager) finish(ctx context.Context, j *job) error {
+	o := j.observed
+	if err := m.notify(ctx, j, o.Status, o.Hash, o.Timestamp); err != nil {
+		return err
+	}
+	if err := m.set(j, o.Status, o.Hash, "On-chain result verified; inventory accounting completed."); err != nil {
+		return err
+	}
+	return nil
 }

@@ -17,12 +17,20 @@ use std::sync::Arc;
 pub fn router(engine: Arc<Engine>) -> Router {
     Router::new()
         .route("/market", get(market))
+        .route("/trades/pending", get(pending))
         .route("/rfqs", post(create))
         .route("/rfqs/{rfq_id}", get(read))
         .route("/rfqs/{rfq_id}/accept", post(accept))
         .route("/rfqs/{rfq_id}/settlement", post(settlement))
         .layer(DefaultBodyLimit::max(4096))
         .with_state(engine)
+}
+
+async fn pending(State(engine): State<Arc<Engine>>) -> Response {
+    match crate::blocking(move || engine.pending_trades()).await {
+        Ok(trades) => Json(trades.into_iter().map(Trade::from).collect::<Vec<_>>()).into_response(),
+        Err(e) => engine_error(e),
+    }
 }
 
 #[derive(Deserialize)]
@@ -161,13 +169,13 @@ async fn create(
             Unit::Cash => RequestAmount::Cash(amount),
         },
     };
-    match engine.create_rfq(&r.trader_id, request) {
+    match crate::blocking(move || engine.create_rfq(&r.trader_id, request)).await {
         Ok(r) => (StatusCode::CREATED, Json(Rfq::from(r))).into_response(),
         Err(e) => engine_error(e),
     }
 }
 async fn read(State(engine): State<Arc<Engine>>, Path(id): Path<String>) -> Response {
-    match engine.rfq(&id) {
+    match crate::blocking(move || engine.rfq(&id)).await {
         Ok(r) => Json(Rfq::from(r)).into_response(),
         Err(e) => engine_error(e),
     }
@@ -181,7 +189,11 @@ async fn accept(
         Ok(Json(r)) => r,
         Err(e) => return invalid_json(e),
     };
-    match engine.accept_expected(&id, &r.quote_id, &r.trader_id, Some(&r.trade_id)) {
+    match crate::blocking(move || {
+        engine.accept_expected(&id, &r.quote_id, &r.trader_id, Some(&r.trade_id))
+    })
+    .await
+    {
         Ok(t) => Json(Trade::from(t)).into_response(),
         Err(e) => engine_error(e),
     }
@@ -215,11 +227,7 @@ pub(super) fn engine_error(e: EngineError) -> Response {
             "INVALID_TRADER",
             "Identité déclarative requise : 1 à 64 caractères ASCII alphanumériques, _ ou -.",
         ),
-        EngineError::UnknownRfq => (
-            StatusCode::NOT_FOUND,
-            "UNKNOWN_RFQ",
-            "RFQ inconnue dans cette session.",
-        ),
+        EngineError::UnknownRfq => (StatusCode::NOT_FOUND, "UNKNOWN_RFQ", "Unknown RFQ."),
         EngineError::WrongTrader => (
             StatusCode::FORBIDDEN,
             "WRONG_TRADER",
@@ -282,13 +290,17 @@ async fn settlement(
         "SETTLEMENT_FAILED" => domain::TradeStatus::SettlementFailed,
         _ => return engine_error(EngineError::InvalidTransition),
     };
-    match engine.settlement(
-        &id,
-        &r.trade_id,
-        status,
-        r.transaction_hash,
-        r.block_timestamp,
-    ) {
+    match crate::blocking(move || {
+        engine.settlement(
+            &id,
+            &r.trade_id,
+            status,
+            r.transaction_hash,
+            r.block_timestamp,
+        )
+    })
+    .await
+    {
         Ok(t) => Json(Trade::from(t)).into_response(),
         Err(e) => engine_error(e),
     }
@@ -312,7 +324,7 @@ struct MarketView {
     makers: Vec<MakerView>,
 }
 async fn market(State(engine): State<Arc<Engine>>) -> Response {
-    let snapshot = match engine.market_snapshot() {
+    let snapshot = match crate::blocking(move || engine.market_snapshot()).await {
         Ok(v) => v,
         Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
     };

@@ -4,7 +4,7 @@ use super::{
     Amount, Asset, Inventory, MakerRejection, Market, MarketError, Quote, QuoteRequest, Side,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Timing {
     pub quote_seconds: u64,
     pub settlement_seconds: u64,
@@ -19,21 +19,21 @@ impl Default for Timing {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct IdentifiedQuote {
     pub quote_id: String,
     pub trade_id: String,
     pub terms: Quote,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RfqStatus {
     Quoted,
     Accepted,
     Expired,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Rfq {
     pub rfq_id: String,
     /// Identité déclarative locale, sans preuve de contrôle d'un wallet.
@@ -49,7 +49,7 @@ pub struct Rfq {
 }
 
 /// Uniquement une réservation interne. Aucune signature ni autorisation on-chain.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Trade {
     pub status: TradeStatus,
     pub transaction_hash: Option<String>,
@@ -64,7 +64,7 @@ pub struct Trade {
     pub reserved_amount: Amount,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TradeStatus {
     Reserved,
     SettlementPending,
@@ -98,7 +98,12 @@ impl From<MarketError> for EngineError {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 struct State {
+    #[serde(skip)]
+    storage: Option<postgres::Client>,
+    #[serde(skip)]
+    failed: bool,
     market: Market,
     rfqs: HashMap<String, Rfq>,
     next_id: u64,
@@ -106,7 +111,7 @@ struct State {
     session: String,
 }
 
-/// Un verrou protège ensemble RFQs, trades et inventaires ; aucun I/O sous ce verrou.
+/// One lock protects RFQs, trades and inventory, including database commits in durable mode.
 pub struct Engine {
     state: Mutex<State>,
     timing: Timing,
@@ -114,6 +119,76 @@ pub struct Engine {
 }
 
 impl Engine {
+    /// One durable writer per database. No automatic reconnect after a lost lock.
+    pub fn persist(self, url: &str, identity: &str) -> Result<Self, EngineError> {
+        if identity.is_empty() {
+            return Err(EngineError::Unavailable);
+        }
+        let mut db = postgres::Client::connect(url, postgres::NoTls)
+            .map_err(|_| EngineError::Unavailable)?;
+        db.batch_execute("SET statement_timeout = '3s'; SET lock_timeout = '3s'")
+            .map_err(|_| EngineError::Unavailable)?;
+        let locked: bool = db
+            .query_one("SELECT pg_try_advisory_lock(734201, 1)", &[])
+            .map_err(|_| EngineError::Unavailable)?
+            .get(0);
+        if !locked {
+            return Err(EngineError::Unavailable);
+        }
+        let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
+        let initial = serde_json::to_string(&*state).map_err(|_| EngineError::Unavailable)?;
+        db.execute("INSERT INTO market_state(singleton, identity, payload) VALUES (true, $1, $2::text::jsonb) ON CONFLICT DO NOTHING", &[&identity, &initial]).map_err(|_| EngineError::Unavailable)?;
+        let row = db
+            .query_one(
+                "SELECT identity, payload::text FROM market_state WHERE singleton",
+                &[],
+            )
+            .map_err(|_| EngineError::Unavailable)?;
+        if row.get::<_, String>(0) != identity {
+            return Err(EngineError::Unavailable);
+        }
+        *state =
+            serde_json::from_str(&row.get::<_, String>(1)).map_err(|_| EngineError::Unavailable)?;
+        // Validate arithmetic before serving restored state.
+        for maker in state.market.makers() {
+            maker.available()?;
+        }
+        state.storage = Some(db);
+        drop(state);
+        Ok(self)
+    }
+
+    fn healthy(state: &mut State) -> Result<(), EngineError> {
+        if state.failed {
+            return Err(EngineError::Unavailable);
+        }
+        if let Some(db) = &mut state.storage
+            && db.simple_query("SELECT 1").is_err()
+        {
+            state.failed = true;
+            return Err(EngineError::Unavailable);
+        }
+        Ok(())
+    }
+
+    fn checkpoint(state: &mut State) -> Result<(), EngineError> {
+        if state.storage.is_none() {
+            return Ok(());
+        }
+        let payload = serde_json::to_string(state).map_err(|_| EngineError::Unavailable)?;
+        let result = state.storage.as_mut().unwrap().execute(
+            "UPDATE market_state SET payload = $1::text::jsonb WHERE singleton",
+            &[&payload],
+        );
+        if !matches!(result, Ok(1)) {
+            // COMMIT may have succeeded despite a lost reply. Stop using RAM until restart.
+            state.failed = true;
+            return Err(EngineError::Unavailable);
+        }
+        Ok(())
+    }
+
     pub fn new(
         market: Market,
         timing: Timing,
@@ -128,6 +203,8 @@ impl Engine {
         Ok(Self {
             state: Mutex::new(State {
                 market,
+                storage: None,
+                failed: false,
                 rfqs: HashMap::new(),
                 next_id: 1,
                 last_now: 0,
@@ -145,12 +222,31 @@ impl Engine {
     }
 
     pub fn market_snapshot(&self) -> Result<Market, EngineError> {
-        let state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         Ok(state.market.clone())
     }
 
+    pub fn pending_trades(&self) -> Result<Vec<Trade>, EngineError> {
+        let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
+        Ok(state
+            .rfqs
+            .values()
+            .filter_map(|r| r.trade.as_ref())
+            .filter(|t| {
+                matches!(
+                    t.status,
+                    TradeStatus::Reserved | TradeStatus::SettlementPending
+                )
+            })
+            .cloned()
+            .collect())
+    }
+
     pub fn indicative_quote(&self, request: QuoteRequest) -> Result<super::QuoteBook, EngineError> {
-        let state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         Ok(state.market.quote(request)?)
     }
 
@@ -164,7 +260,9 @@ impl Engine {
             return Err(EngineError::InvalidTrader);
         }
         let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         let now = self.now(&mut state);
+        Self::checkpoint(&mut state)?;
         let quote_expires_at = now
             .checked_add(self.timing.quote_seconds)
             .ok_or(MarketError::ArithmeticOverflow)?;
@@ -203,22 +301,28 @@ impl Engine {
         };
         state.next_id = next_id;
         state.rfqs.insert(rfq.rfq_id.clone(), rfq.clone());
+        Self::checkpoint(&mut state)?;
         Ok(rfq)
     }
 
     pub fn rfq(&self, rfq_id: &str) -> Result<Rfq, EngineError> {
         let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         let now = self.now(&mut state);
+        Self::checkpoint(&mut state)?;
         let rfq = state.rfqs.get_mut(rfq_id).ok_or(EngineError::UnknownRfq)?;
         expire(rfq, now);
-        Ok(rfq.clone())
+        let result = rfq.clone();
+        Self::checkpoint(&mut state)?;
+        Ok(result)
     }
 
     pub fn maker_inventory(
         &self,
         maker_id: &str,
     ) -> Result<Option<(Inventory, Inventory)>, EngineError> {
-        let state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         Ok(state
             .market
             .makers
@@ -244,7 +348,9 @@ impl Engine {
         trade_id: Option<&str>,
     ) -> Result<Trade, EngineError> {
         let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         let now = self.now(&mut state);
+        Self::checkpoint(&mut state)?;
         let rfq = state.rfqs.get_mut(rfq_id).ok_or(EngineError::UnknownRfq)?;
         if rfq.trader_id != trader_id {
             return Err(EngineError::WrongTrader);
@@ -323,6 +429,7 @@ impl Engine {
             .expect("RFQ vérifiée sous le même verrou");
         stored.status = RfqStatus::Accepted;
         stored.trade = Some(trade.clone());
+        Self::checkpoint(&mut state)?;
         Ok(trade)
     }
 
@@ -336,6 +443,7 @@ impl Engine {
         block_timestamp: u64,
     ) -> Result<Trade, EngineError> {
         let mut state = self.state.lock().map_err(|_| EngineError::Unavailable)?;
+        Self::healthy(&mut state)?;
         let mut trade = state
             .rfqs
             .get(rfq_id)
@@ -361,6 +469,7 @@ impl Engine {
             TradeStatus::Settled | TradeStatus::SettlementFailed
         ) {
             return if trade.status == status {
+                Self::checkpoint(&mut state)?;
                 Ok(trade)
             } else {
                 Err(EngineError::InvalidTransition)
@@ -424,6 +533,21 @@ impl Engine {
             .get_mut(rfq_id)
             .expect("RFQ vérifiée sous verrou")
             .trade = Some(trade.clone());
+        Self::checkpoint(&mut state)?;
+        if status == TradeStatus::Settled
+            && std::env::var("RFQ_TEST_MODE").as_deref() == Ok("1")
+            && std::env::var("RFQ_TEST_FAILPOINT").as_deref() == Ok("after_accounting")
+            && let Ok(dir) = std::env::var("RFQ_TEST_SIGNAL_DIR")
+        {
+            std::fs::write(
+                std::path::Path::new(&dir).join("after_accounting.ready"),
+                "ready",
+            )
+            .map_err(|_| EngineError::Unavailable)?;
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        }
         Ok(trade)
     }
 }

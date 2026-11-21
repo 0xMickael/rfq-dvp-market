@@ -4,13 +4,13 @@ use super::{
     RejectionReason, SCALE,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Side {
     Buy,
     Sell,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RequestAmount {
     /// Quantité exacte de titres, dans les deux sens.
     Tbill(Amount),
@@ -18,13 +18,13 @@ pub enum RequestAmount {
     Cash(Amount),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct QuoteRequest {
     pub side: Side,
     pub amount: RequestAmount,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Quote {
     pub maker_id: String,
     pub side: Side,
@@ -33,7 +33,7 @@ pub struct Quote {
     pub cash_amount: Amount,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct QuoteBook {
     /// Classées du meilleur prix au moins bon, puis par identifiant MM en cas d'égalité.
     pub quotes: Vec<Quote>,
@@ -47,7 +47,7 @@ impl QuoteBook {
 }
 
 /// Snapshot immuable. Obtenir une quote ne bloque pas les fonds ni les titres.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Market {
     reference_price: Amount,
     pub(super) makers: Vec<MarketMaker>,

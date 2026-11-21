@@ -1,7 +1,7 @@
 use super::amount::from_wide;
 use super::{Amount, MarketError, SCALE};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ReferenceMarket {
     pub face_value: Amount,
     pub annual_rate: Amount,
@@ -32,13 +32,13 @@ impl ReferenceMarket {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Inventory {
     pub tbill: Amount,
     pub cash: Amount,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct MarketMaker {
     pub id: String,
     pub inventory: Inventory,
@@ -51,7 +51,7 @@ pub struct MarketMaker {
     pub spread: Amount,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Prices {
     pub bid: Amount,
     pub ask: Amount,

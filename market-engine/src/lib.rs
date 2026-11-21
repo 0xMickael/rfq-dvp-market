@@ -12,8 +12,8 @@ struct Health {
     status: &'static str,
 }
 
-pub fn router() -> Router {
-    let engine = domain::Engine::new(
+pub fn demo_engine() -> domain::Engine {
+    domain::Engine::new(
         domain::Market::demo().expect("configuration de démonstration valide"),
         domain::Timing {
             quote_seconds: 120,
@@ -26,8 +26,19 @@ pub fn router() -> Router {
                 .as_secs()
         },
     )
-    .expect("échéances de démonstration valides");
-    router_with_engine(std::sync::Arc::new(engine))
+    .expect("valid demo deadlines")
+}
+
+pub fn router() -> Router {
+    router_with_engine(std::sync::Arc::new(demo_engine()))
+}
+
+pub(crate) async fn blocking<T: Send + 'static>(
+    f: impl FnOnce() -> Result<T, domain::EngineError> + Send + 'static,
+) -> Result<T, domain::EngineError> {
+    tokio::task::spawn_blocking(f)
+        .await
+        .map_err(|_| domain::EngineError::Unavailable)?
 }
 
 pub fn router_with_engine(engine: std::sync::Arc<domain::Engine>) -> Router {

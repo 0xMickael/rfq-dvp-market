@@ -8,7 +8,10 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"rfq-dvp-market.local/backend/internal/durable"
+	"rfq-dvp-market.local/backend/internal/failpoint"
 	"strings"
+	"sync"
 	"time"
 
 	"rfq-dvp-market.local/backend/internal/engine"
@@ -17,6 +20,11 @@ import (
 )
 
 type SigningService struct {
+	readinessMu    sync.RWMutex
+	ready          bool
+	readinessError string
+	Store          *durable.Store
+
 	Settlement *settlement.Manager
 	client     *engine.Client
 	config     signing.Config
@@ -73,7 +81,15 @@ func registerRFQs(mux *http.ServeMux, s *SigningService) {
 			next(w, r)
 		}
 	}
+	mux.HandleFunc("GET /api/readiness", enabled(func(w http.ResponseWriter, r *http.Request) {
+		if s.admit(w) {
+			writeJSON(w, 200, map[string]string{"status": "ready"})
+		}
+	}))
 	mux.HandleFunc("POST /api/rfqs", enabled(func(w http.ResponseWriter, r *http.Request) {
+		if !s.admit(w) {
+			return
+		}
 		var input struct {
 			TraderID string `json:"trader_id"`
 			Side     string `json:"side"`
@@ -211,6 +227,15 @@ type SignedTrade struct {
 }
 
 func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
+	if !s.admit(w) {
+		return
+	}
+	if s.Store != nil {
+		if err := s.Store.Check(); err != nil {
+			fail(w, 503, "DATABASE_UNAVAILABLE", err.Error())
+			return
+		}
+	}
 	var input struct {
 		QuoteID   string `json:"quote_id"`
 		TradeID   string `json:"trade_id"`
@@ -246,6 +271,12 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 		fail(w, 410, "SETTLEMENT_DEADLINE", "Deadline de settlement atteinte ; aucune signature MM émise.")
 		return
 	}
+	if s.Store != nil {
+		if err := s.Store.Intent(durable.Intent{RfqID: rfq.RfqID, QuoteID: q.QuoteID, TradeID: q.TradeID, Signature: signing.CanonicalSignature(input.Signature)}); err != nil {
+			fail(w, 503, "DATABASE_UNAVAILABLE", err.Error())
+			return
+		}
+	}
 	var trade engine.Trade
 	if rfq.Status == "ACCEPTED" && rfq.Trade != nil {
 		trade = *rfq.Trade
@@ -259,6 +290,7 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	failpoint.Hit("after_reservation")
 	if err := checkReservation(rfq, q, trade); err != nil {
 		fail(w, 409, "RESERVATION_MISMATCH", err.Error())
 		return
@@ -285,6 +317,12 @@ func (s *SigningService) accept(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		result.Settlement = &queued
+		if s.Store != nil {
+			if err := s.Store.Complete(q.TradeID); err != nil {
+				fail(w, 503, "DATABASE_UNAVAILABLE", err.Error())
+				return
+			}
+		}
 	}
 	writeJSON(w, 200, result)
 }

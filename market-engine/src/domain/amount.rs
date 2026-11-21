@@ -4,7 +4,18 @@ pub const SCALE: u64 = 1_000_000;
 
 /// Valeur non négative à six décimales. L'unité est indiquée par le champ métier.
 /// Le stockage u64 est élargi en u128 pour les produits de deux montants.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize,
+)]
 pub struct Amount(u64);
 
 impl Amount {
