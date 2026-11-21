@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"rfq-dvp-market.local/backend/internal/engine"
 )
 
 func TestHealth(t *testing.T) {
 	response := httptest.NewRecorder()
-	NewHandler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	Handler(engine.NewClient("http://127.0.0.1:8081")).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/healthz", nil))
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, expected 200", response.Code)
 	}
@@ -31,7 +33,7 @@ func TestUnsupportedRoutes(t *testing.T) {
 	} {
 		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
 			response := httptest.NewRecorder()
-			NewHandler().ServeHTTP(response, httptest.NewRequest(tc.method, tc.path, nil))
+			Handler(engine.NewClient("http://127.0.0.1:8081")).ServeHTTP(response, httptest.NewRequest(tc.method, tc.path, nil))
 			if response.Code != tc.status {
 				t.Fatalf("status = %d, expected %d", response.Code, tc.status)
 			}

@@ -9,8 +9,6 @@ import (
 	"rfq-dvp-market.local/backend/internal/settlement"
 )
 
-func NewHandler() http.Handler { return Handler(engine.NewClient("http://127.0.0.1:8081")) }
-
 func Handler(client *engine.Client, signing ...*SigningService) http.Handler {
 	mux := http.NewServeMux()
 	var service *SigningService

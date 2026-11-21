@@ -93,7 +93,7 @@ try {
     $logs = Join-Path $root ('.cache/demo/' + [DateTime]::Now.ToString('yyyyMMdd-HHmmss') + '-' + $PID)
     New-Item -ItemType Directory -Force -Path $logs | Out-Null
     Write-Host "Building and preparing the demo. Logs: $logs"
-    Invoke-Build 'market-engine' $tools.cargo @('build', '--locked', '--target-dir', '../.cache/stage1-rust')
+    Invoke-Build 'market-engine' $tools.cargo @('build', '--locked', '--target-dir', '../.cache/demo-rust')
     Invoke-Build 'backend' $tools.go @('build', '-o', '../.cache/demo-api.exe', './cmd/rfq-dvp-market-api')
     Invoke-Build 'contracts' $tools.forge @('build')
     Invoke-Build 'web' $tools.'npm.cmd' @('run', 'build')
@@ -114,7 +114,7 @@ try {
     $env:DEPLOYMENT_FILE = $oldDeploymentFile
     Assert-Processes
     $env:ENGINE_ADDR = '127.0.0.1:8081'
-    Start-ServiceProcess 'rust' (Join-Path $root '.cache/stage1-rust/debug/rfq-dvp-market-engine.exe') @() $root
+    Start-ServiceProcess 'rust' (Join-Path $root '.cache/demo-rust/debug/rfq-dvp-market-engine.exe') @() $root
     Wait-Ready 'Rust' { (Invoke-RestMethod 'http://127.0.0.1:8081/healthz' -TimeoutSec 2).status -eq 'ok' }
     Start-ServiceProcess 'go' (Join-Path $root '.cache/demo-api.exe') @('-deployment','contracts/deployments/31337.json','-rpc','http://127.0.0.1:8545','-listen','127.0.0.1:8080','-engine','http://127.0.0.1:8081') $root
     Wait-Ready 'Go' { (Invoke-RestMethod 'http://127.0.0.1:8080/api/config' -TimeoutSec 2).settlement_enabled -eq $true }

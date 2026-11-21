@@ -92,7 +92,7 @@ try {
     if (-not $SkipIntegration) {
         foreach ($scenario in @('Signatures','Settlement')) {
             Run-Check "Integration $scenario : real processes through Vite" '.' {
-                & (Join-Path $PSScriptRoot 'test-app-settlement.ps1') -Scenario $scenario -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -WebDist (Join-Path $run 'web')
+                & (Join-Path $PSScriptRoot 'test-integration.ps1') -Scenario $scenario -ApiBinary (Join-Path $run 'api.exe') -EngineBinary (Join-Path $run 'engine.exe') -WebDist (Join-Path $run 'web')
             }
         }
         Run-Check 'PostgreSQL recovery: real Go/Rust crashes on Anvil' '.' {

@@ -1,16 +1,13 @@
-# Windows PowerShell 5.1. Build first with scripts/verify.ps1.
+# Full-stack signature and settlement checks. Build first with scripts/verify.ps1.
 [CmdletBinding()]
 param(
     [ValidateSet('Settlement', 'Signatures')][string]$Scenario = 'Settlement',
-    [string]$ApiBinary = '',
-    [string]$EngineBinary = '',
-    [string]$WebDist = ''
+    [Parameter(Mandatory)][string]$ApiBinary,
+    [Parameter(Mandatory)][string]$EngineBinary,
+    [Parameter(Mandatory)][string]$WebDist
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot
-if (-not $ApiBinary) { $ApiBinary = Join-Path $root '.cache/settlement-api.exe' }
-if (-not $EngineBinary) { $EngineBinary = Join-Path $root '.cache/stage1-rust/debug/rfq-dvp-market-engine.exe' }
-if (-not $WebDist) { $WebDist = Join-Path $root 'web/dist' }
 $processes = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
 $saved = @{}
 foreach ($name in @('Path','ENGINE_ADDR','FOUNDRY_BROADCAST','FOUNDRY_CACHE_PATH','DEPLOYMENT_FILE','API_PROXY_TARGET','TEST_API_URL','DATABASE_URL','MARKET_ID','RFQ_TEST_MODE','RFQ_TEST_FAILPOINT')) {

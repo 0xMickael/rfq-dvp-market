@@ -4,10 +4,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"rfq-dvp-market.local/backend/internal/engine"
 )
 
 func TestMetricsUseRouteTemplatesForUnknownIdentifiers(t *testing.T) {
-	handler := NewHandler()
+	handler := Handler(engine.NewClient("http://127.0.0.1:8081"))
 	for _, path := range []string{"/unknown-one", "/unknown-two", "/healthz"} {
 		handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", path, nil))
 	}
