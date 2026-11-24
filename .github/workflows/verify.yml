@@ -53,7 +53,9 @@ jobs:
           npm.cmd ci --prefix web --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           ./contracts/install-deps.ps1
-          ./scripts/install-postgres.ps1
+      - name: Install PostgreSQL binaries
+        timeout-minutes: 10
+        run: ./scripts/install-postgres.ps1
       - name: Run the same checks as locally
         run: ./scripts/verify.ps1
       - name: Retain diagnostic logs only
