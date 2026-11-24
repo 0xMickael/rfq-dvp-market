@@ -27,7 +27,7 @@ type savedJob struct {
 	Observed *observation
 }
 
-// Identity binds a database to contracts AND chain history, not just chainId 31337.
+// Identity binds the database to the deployment through its config and first two block hashes.
 func Identity(ctx context.Context, endpoint string, c signing.Config) (string, error) {
 	rpc, err := ethclient.DialContext(ctx, endpoint)
 	if err != nil {

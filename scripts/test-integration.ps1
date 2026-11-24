@@ -1,4 +1,4 @@
-# Full-stack signature and settlement checks. Build first with scripts/verify.ps1.
+# Called by verify.ps1 with prebuilt artifacts for the signature and settlement checks.
 [CmdletBinding()]
 param(
     [ValidateSet('Settlement', 'Signatures')][string]$Scenario = 'Settlement',
@@ -45,7 +45,6 @@ function Wait-TestReady([string]$Name, [scriptblock]$Check) {
 }
 function Invoke-TestClient([string]$File) {
     $client = Start-TestProcess 'client' (Get-Command node).Source @($File) $root
-    # A regression must not leave the integration waiting indefinitely.
     if (-not $client.WaitForExit(120000)) { throw "Test client timed out. Logs: $logs" }
     $processes.Remove($client) | Out-Null
     $code = $client.ExitCode

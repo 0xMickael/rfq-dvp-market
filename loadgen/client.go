@@ -32,9 +32,8 @@ type client struct {
 	wallets []*wallet
 }
 type apiFailure struct {
-	Status  int
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Status int
+	Code   string `json:"code"`
 }
 
 func (e *apiFailure) Error() string { return fmt.Sprintf("HTTP %d %s", e.Status, e.Code) }

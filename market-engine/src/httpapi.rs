@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::{
-    Engine, EngineError, MakerRejection, MarketError, QuoteRequest, RejectionReason, RequestAmount,
-    Side,
-};
+use crate::domain::{Engine, MakerRejection, QuoteRequest, RejectionReason, RequestAmount, Side};
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, State, rejection::JsonRejection},
@@ -136,18 +133,6 @@ async fn quotes(
             rejections: rejections(book.rejections),
         })
         .into_response(),
-        Err(EngineError::Market(MarketError::NoExecutableQuote(items))) => error(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "NO_EXECUTABLE_QUOTE",
-            "No market maker can fill the entire request.".into(),
-            items,
-        ),
-        Err(EngineError::Market(err)) => error(
-            StatusCode::BAD_REQUEST,
-            "INVALID_AMOUNT",
-            err.to_string(),
-            vec![],
-        ),
         Err(err) => crate::rfqapi::engine_error(err),
     }
 }
