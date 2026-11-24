@@ -1,53 +1,47 @@
-﻿# rfq-dvp-market
+# rfq-dvp-market
 
-Marché RFQ pédagogique pour acheter ou vendre un titre fictif **tBILL** contre du cash fictif **sEUR**, avec un moteur Rust, un backend Go et un settlement atomique Solidity sur Anvil.
+A local trading simulation built with **Rust and Go**. A trader requests buy or sell prices from three simulated market makers and can settle a trade between two fictional assets: a Treasury bill token (`tBILL`) and a euro cash token (`sEUR`).
 
-Le projet sert à comprendre comment une décision de marché off-chain devient un échange on-chain autorisé par les deux contreparties. Trois market makers simulés proposent des prix calculés, puis le trader choisit une quote et signe ses termes dans MetaMask.
+I built this project to explore market infrastructure while learning Rust and Go. The simulation follows a trade from the request for quote (RFQ) through pricing, inventory reservation and settlement on a local Anvil chain.
 
-## Ce qui fonctionne
+## Try it
 
-- BUY et SELL, en quantité exacte de tBILL ou en budget maximal / cash minimum sEUR, avec six décimales.
-- Quotes identifiées et expirables, classement du meilleur prix et réservations atomiques dans Rust.
-- Signatures EIP-712 trader/MM, transaction envoyée par Go, vérification du receipt et comptabilité idempotente.
-- Interface affichant compte, soldes, résultat et transaction hash ; parcours local confirmé par l'auteur.
-- Tests de concurrence, expiration, replay, transferts atomiques et réponses perdues ; scénario réel BUY/SELL sur Anvil.
-
-```mermaid
-flowchart LR
-    W[Frontend et MetaMask] -->|RFQ et signature trader| G[Go : API et settlement]
-    G -->|Quotes et réservations| R[Rust : marché et inventaires]
-    G -->|Transaction signée| A[Anvil : sEUR, tBILL et DvP]
-    A -->|Receipt et événement| G
-    G -->|Résultat vérifié| R
-```
-
-## Lire et lancer
-
-Depuis PowerShell, après installation des [prérequis et dépendances](docs/development.md) :
+Use **Windows and PowerShell**. From the repository root, after installing [the required tools](docs/development.md#prerequisites):
 
 ```powershell
+.\contracts\install-deps.ps1
+npm ci --prefix web --ignore-scripts
 .\scripts\demo.ps1
 ```
 
-Un seul terminal compile et lance Anvil, déploie les contrats, puis démarre Rust, Go et le frontend. Ouvre **http://127.0.0.1:5173**, connecte ton compte MetaMask de test et signe un trade. **Ctrl+C** arrête les services. Chaque lancement recrée une session avec les soldes initiaux ; les logs sont dans `.cache/demo/`.
+Open [the trader interface](http://127.0.0.1:5173). Select **BUY**, enter **100 tBILL**, and click **Request quotes** to compare the available prices. You can try this without a wallet.
 
-1. [Lancer la démo et les tests](docs/development.md) : prérequis, commandes PowerShell et MetaMask.
-2. [Comprendre le projet](docs/architecture.md) : exemple de trade, rôles Go/Rust/Solidity, pricing, sécurité et persistance.
-3. [État et prochaines étapes](docs/progress.md) : validations datées, limites et objectif portfolio.
-4. [Référence API et signatures](docs/api.md) : à consulter pour travailler sur le code, sans lecture préalable obligatoire.
+To settle a trade, connect the [funded MetaMask test account](docs/development.md#metamask), request a fresh quote, then choose **Sign and execute**. The interface shows the settlement status, transaction hash and updated balances. Ctrl+C stops the demo. Each demo starts fresh, so use the [persistent setup](docs/development.md#persistent-market) to keep trades across restarts.
 
-## Parcourir le code
+## How it works
 
-- `market-engine/src/domain/` : montants exacts, pricing, RFQs et transitions sous verrou.
-- `backend/internal/httpapi/` : routes et vérification avant réservation.
-- `backend/internal/signing/` : termes EIP-712 et signatures des MM de démonstration.
-- `backend/internal/settlement/` : transactions, nonces, receipts et notification à Rust.
-- `contracts/src/` : tokens et contrat DvP ; `contracts/test/` : tests Foundry.
-- `web/src/` : interface TypeScript, wallet et vérification des termes.
-- `scripts/` : tests intégrés reproductibles ; `loadgen/` reste une intention, pas un outil livré.
+- **Rust** prices RFQs, ranks the offers and reserves inventory when a trader accepts. Concurrent traders cannot reserve the same stock twice.
+- **Go** verifies the trader's signature, signs for the simulated maker, submits the transaction and checks the chain result.
+- **PostgreSQL** saves the market state and settlement jobs in persistent mode so Go and Rust can resume after a restart.
+- **Solidity** checks the signed terms and transfers both assets atomically. This is delivery versus payment (DvP).
 
-## Portée et portfolio
+## Tests and measurements
 
-L'objectif est un dépôt public GitHub permettant de comprendre, exécuter et discuter le projet. Le travail porte sur la cohérence de l'inventaire, la frontière entre signature et transaction, et les échecs aux frontières entre services. L'implémentation est assistée par IA ; l'objectif de l'auteur est d'en comprendre et défendre les choix.
+The [verification suite](docs/development.md#verification) covers concurrent reservations, duplicate requests, lost RPC responses and real Go/Rust process crashes. [GitHub Actions](.github/workflows/verify.yml) runs the full Windows suite and the Go race detector on Linux.
 
-Cette version est une **démo locale**, pas une infrastructure de production : tokens sans valeur réelle, comptes Anvil publics, API internes de confiance et état Go/Rust en mémoire. Un redémarrage avec perte d'état exige une réinitialisation coordonnée. Pas de base de données, reprise durable, load generator, métriques, CI ou déploiement Sepolia livrés. Publier le code sur GitHub n'exige pas de rendre ces API accessibles sur Internet.
+A Go load generator simulates multiple wallets through the same API as the trader interface. The [performance report](docs/performance.md) measures quotes, reservations and completed settlements separately on a single local machine.
+
+## Documentation
+
+| Read this | For |
+|---|---|
+| [Setup and usage](docs/development.md) | Running the demo, connecting MetaMask, keeping state and running tests |
+| [Architecture](docs/architecture.md) | Pricing, concurrent reservations, settlement recovery and design trade-offs |
+| [API reference](docs/api.md) | HTTP endpoints and signed trade terms |
+| [Performance report](docs/performance.md) | Local results, what they measure and how to reproduce them |
+
+The simulation uses public test accounts and fictional assets on a local chain. It has no order book, partial fills, public deployment or real custody.
+
+## Feedback
+
+This is a learning project. If you have a question, spot an error, or want to suggest a different approach, please [open an issue](https://github.com/0xMickael/rfq-dvp-market/issues).

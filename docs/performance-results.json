@@ -1,0 +1,3145 @@
+{
+  "machine": {
+    "utc": "2026-11-16T23:00:28.9045059Z",
+    "cpu": [
+      {
+        "Name": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "NumberOfCores": 4,
+        "NumberOfLogicalProcessors": 8
+      }
+    ],
+    "memory_bytes": 12711006208,
+    "windows": "Microsoft Windows NT 10.0.26300.0",
+    "go": "go version go1.26.8 windows/amd64",
+    "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "node": "v24.22.1",
+    "foundry": [
+      "anvil Version: 1.9.0",
+      "Commit SHA: 6056c5845d34205a83cf7108042adb137325c9df",
+      "Build Timestamp: 2026-11-02T20:11:29.162616900Z (1793650289)",
+      "Build Profile: dist"
+    ],
+    "postgres": "pg_ctl (PostgreSQL) 18.7",
+    "repetitions": 3,
+    "concurrency": [
+      1,
+      8
+    ],
+    "traders": 8,
+    "modes": [
+      "quotes",
+      "accept",
+      "settlement"
+    ],
+    "admission_seconds": 3,
+    "warmup_seconds": 1,
+    "requests": 10000,
+    "settlement_requests": 100,
+    "accept_percent": 100,
+    "mining": "Anvil automine, un bloc par transaction, aucune attente artificielle",
+    "git_head": "09ef48770e594723001f1dc36d5e936cd40f275c",
+    "dirty": true
+  },
+  "binaries": {
+    "api_sha256": "f4d90f6e5b202ee563f022e4c533f9288a0d9cf6cdd2811881a8334b8dbd9f2b",
+    "loadgen_sha256": "217af6580e31d5a9909a05c17bf831a80f2d1f09a57c9195b70c300478a497a8",
+    "engine_sha256": "b2b92dfe33731401807fc2d7712687a1dbbc993f0035e91491830542c732365d"
+  },
+  "engine_profile": "release",
+  "trials": [
+    {
+      "mode": "quotes",
+      "concurrency": 1,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:00:56.2147806Z",
+        "admission_seconds": 3.000678,
+        "completion_seconds": 3.0318163,
+        "warmup_rfqs": 89,
+        "operations_attempted": 102,
+        "operations_completed": 102,
+        "successful_operations": 102,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 102,
+        "quotes_received": 306,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 43,
+        "sell_rfqs_created": 59,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 33.64319929278037,
+        "stages": {
+          "operation": {
+            "attempted": 102,
+            "successful": 102,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 102
+            },
+            "latency_all_responses": {
+              "count": 102,
+              "p50_ms": 25.1944,
+              "p95_ms": 41.9712,
+              "p99_ms": 165.8816,
+              "max_ms": 185.5175
+            },
+            "latency_success": {
+              "count": 102,
+              "p50_ms": 25.1944,
+              "p95_ms": 41.9712,
+              "p99_ms": 165.8816,
+              "max_ms": 185.5175
+            }
+          },
+          "rfq": {
+            "attempted": 102,
+            "successful": 102,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 102
+            },
+            "latency_all_responses": {
+              "count": 102,
+              "p50_ms": 25.1944,
+              "p95_ms": 41.9712,
+              "p99_ms": 165.8816,
+              "max_ms": 185.5175
+            },
+            "latency_success": {
+              "count": 102,
+              "p50_ms": 25.1944,
+              "p95_ms": 41.9712,
+              "p99_ms": 165.8816,
+              "max_ms": 185.5175
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 102,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "quotes",
+      "concurrency": 1,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:01:20.862088Z",
+        "admission_seconds": 3.0009653,
+        "completion_seconds": 3.0288599,
+        "warmup_rfqs": 94,
+        "operations_attempted": 113,
+        "operations_completed": 113,
+        "successful_operations": 113,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 113,
+        "quotes_received": 339,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 49,
+        "sell_rfqs_created": 64,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 37.30776718989215,
+        "stages": {
+          "operation": {
+            "attempted": 113,
+            "successful": 113,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 113
+            },
+            "latency_all_responses": {
+              "count": 113,
+              "p50_ms": 23.2805,
+              "p95_ms": 48.4068,
+              "p99_ms": 84.6861,
+              "max_ms": 152.7884
+            },
+            "latency_success": {
+              "count": 113,
+              "p50_ms": 23.2805,
+              "p95_ms": 48.4068,
+              "p99_ms": 84.6861,
+              "max_ms": 152.7884
+            }
+          },
+          "rfq": {
+            "attempted": 113,
+            "successful": 113,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 113
+            },
+            "latency_all_responses": {
+              "count": 113,
+              "p50_ms": 23.2805,
+              "p95_ms": 48.4068,
+              "p99_ms": 84.6861,
+              "max_ms": 152.7884
+            },
+            "latency_success": {
+              "count": 113,
+              "p50_ms": 23.2805,
+              "p95_ms": 48.4068,
+              "p99_ms": 84.6861,
+              "max_ms": 152.7884
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 113,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "quotes",
+      "concurrency": 1,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:01:44.7799496Z",
+        "admission_seconds": 3.0006562,
+        "completion_seconds": 3.0202714,
+        "warmup_rfqs": 96,
+        "operations_attempted": 108,
+        "operations_completed": 108,
+        "successful_operations": 108,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 108,
+        "quotes_received": 324,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 44,
+        "sell_rfqs_created": 64,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 35.75837588635247,
+        "stages": {
+          "operation": {
+            "attempted": 108,
+            "successful": 108,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 108
+            },
+            "latency_all_responses": {
+              "count": 108,
+              "p50_ms": 21.1702,
+              "p95_ms": 61.9067,
+              "p99_ms": 114.5122,
+              "max_ms": 143.569
+            },
+            "latency_success": {
+              "count": 108,
+              "p50_ms": 21.1702,
+              "p95_ms": 61.9067,
+              "p99_ms": 114.5122,
+              "max_ms": 143.569
+            }
+          },
+          "rfq": {
+            "attempted": 108,
+            "successful": 108,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 108
+            },
+            "latency_all_responses": {
+              "count": 108,
+              "p50_ms": 21.1702,
+              "p95_ms": 61.9067,
+              "p99_ms": 114.5122,
+              "max_ms": 143.569
+            },
+            "latency_success": {
+              "count": 108,
+              "p50_ms": 21.1702,
+              "p95_ms": 61.9067,
+              "p99_ms": 114.5122,
+              "max_ms": 143.569
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 108,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "quotes",
+      "concurrency": 8,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:02:08.4945748Z",
+        "admission_seconds": 3.0006455,
+        "completion_seconds": 3.2662497,
+        "warmup_rfqs": 72,
+        "operations_attempted": 134,
+        "operations_completed": 134,
+        "successful_operations": 134,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 134,
+        "quotes_received": 402,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 61,
+        "sell_rfqs_created": 73,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 41.02564479378292,
+        "stages": {
+          "operation": {
+            "attempted": 134,
+            "successful": 134,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 134
+            },
+            "latency_all_responses": {
+              "count": 134,
+              "p50_ms": 175.02,
+              "p95_ms": 306.3215,
+              "p99_ms": 322.4911,
+              "max_ms": 337.0203
+            },
+            "latency_success": {
+              "count": 134,
+              "p50_ms": 175.02,
+              "p95_ms": 306.3215,
+              "p99_ms": 322.4911,
+              "max_ms": 337.0203
+            }
+          },
+          "rfq": {
+            "attempted": 134,
+            "successful": 134,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 134
+            },
+            "latency_all_responses": {
+              "count": 134,
+              "p50_ms": 175.02,
+              "p95_ms": 306.3215,
+              "p99_ms": 322.4911,
+              "max_ms": 337.0203
+            },
+            "latency_success": {
+              "count": 134,
+              "p50_ms": 175.02,
+              "p95_ms": 306.3215,
+              "p99_ms": 322.4911,
+              "max_ms": 337.0203
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 134,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "quotes",
+      "concurrency": 8,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:02:33.1255377Z",
+        "admission_seconds": 3.000612,
+        "completion_seconds": 3.2050908,
+        "warmup_rfqs": 82,
+        "operations_attempted": 124,
+        "operations_completed": 124,
+        "successful_operations": 124,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 124,
+        "quotes_received": 372,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 57,
+        "sell_rfqs_created": 67,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 38.6884515097045,
+        "stages": {
+          "operation": {
+            "attempted": 124,
+            "successful": 124,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 124
+            },
+            "latency_all_responses": {
+              "count": 124,
+              "p50_ms": 188.966,
+              "p95_ms": 241.7131,
+              "p99_ms": 261.1094,
+              "max_ms": 261.3624
+            },
+            "latency_success": {
+              "count": 124,
+              "p50_ms": 188.966,
+              "p95_ms": 241.7131,
+              "p99_ms": 261.1094,
+              "max_ms": 261.3624
+            }
+          },
+          "rfq": {
+            "attempted": 124,
+            "successful": 124,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 124
+            },
+            "latency_all_responses": {
+              "count": 124,
+              "p50_ms": 188.966,
+              "p95_ms": 241.7131,
+              "p99_ms": 261.1094,
+              "max_ms": 261.3624
+            },
+            "latency_success": {
+              "count": 124,
+              "p50_ms": 188.966,
+              "p95_ms": 241.7131,
+              "p99_ms": 261.1094,
+              "max_ms": 261.3624
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 124,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "quotes",
+      "concurrency": 8,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "quotes",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:02:56.8039642Z",
+        "admission_seconds": 3.0007509,
+        "completion_seconds": 3.2120624,
+        "warmup_rfqs": 107,
+        "operations_attempted": 135,
+        "operations_completed": 135,
+        "successful_operations": 135,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 135,
+        "quotes_received": 405,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 62,
+        "sell_rfqs_created": 73,
+        "acceptances_acknowledged": 0,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 42.029071415300024,
+        "stages": {
+          "operation": {
+            "attempted": 135,
+            "successful": 135,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 135
+            },
+            "latency_all_responses": {
+              "count": 135,
+              "p50_ms": 179.7936,
+              "p95_ms": 240.3942,
+              "p99_ms": 263.2142,
+              "max_ms": 267.4474
+            },
+            "latency_success": {
+              "count": 135,
+              "p50_ms": 179.7936,
+              "p95_ms": 240.3942,
+              "p99_ms": 263.2142,
+              "max_ms": 267.4474
+            }
+          },
+          "rfq": {
+            "attempted": 135,
+            "successful": 135,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 135
+            },
+            "latency_all_responses": {
+              "count": 135,
+              "p50_ms": 179.7936,
+              "p95_ms": 240.3942,
+              "p99_ms": 262.6984,
+              "max_ms": 267.4474
+            },
+            "latency_success": {
+              "count": 135,
+              "p50_ms": 179.7936,
+              "p95_ms": 240.3942,
+              "p99_ms": 262.6984,
+              "max_ms": 267.4474
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 135,
+          "trades": 0,
+          "settled": 0,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 1,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:03:18.1929732Z",
+        "admission_seconds": 3.0002299,
+        "completion_seconds": 3.0033524,
+        "warmup_rfqs": 105,
+        "operations_attempted": 297,
+        "operations_completed": 297,
+        "successful_operations": 6,
+        "business_rejected_operations": 291,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 12,
+        "distinct_traders_with_rfq": 6,
+        "buy_rfqs_created": 3,
+        "sell_rfqs_created": 3,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 98.88949428645137,
+        "stages": {
+          "accept": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 37.7089,
+              "p95_ms": 137.7385,
+              "p99_ms": 137.7385,
+              "max_ms": 137.7385
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 37.7089,
+              "p95_ms": 137.7385,
+              "p99_ms": 137.7385,
+              "max_ms": 137.7385
+            }
+          },
+          "operation": {
+            "attempted": 297,
+            "successful": 6,
+            "business_rejected": 291,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 291,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 297,
+              "p50_ms": 7.6538,
+              "p95_ms": 9.8682,
+              "p99_ms": 123.4842,
+              "max_ms": 169.9012
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 70.7495,
+              "p95_ms": 169.9012,
+              "p99_ms": 169.9012,
+              "max_ms": 169.9012
+            }
+          },
+          "rfq": {
+            "attempted": 297,
+            "successful": 6,
+            "business_rejected": 291,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 291,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 297,
+              "p50_ms": 7.6538,
+              "p95_ms": 9.8682,
+              "p99_ms": 16.7224,
+              "max_ms": 99.3685
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 14.9882,
+              "p95_ms": 28.6606,
+              "p99_ms": 28.6606,
+              "max_ms": 28.6606
+            }
+          },
+          "sign_local": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 0,
+              "p95_ms": 0.7093,
+              "p99_ms": 0.7093,
+              "max_ms": 0.7093
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 0,
+              "p95_ms": 0.7093,
+              "p99_ms": 0.7093,
+              "max_ms": 0.7093
+            }
+          },
+          "terms": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 14.9984,
+              "p95_ms": 39.3501,
+              "p99_ms": 39.3501,
+              "max_ms": 39.3501
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 14.9984,
+              "p95_ms": 39.3501,
+              "p99_ms": 39.3501,
+              "max_ms": 39.3501
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 6,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 1,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:03:33.908439Z",
+        "admission_seconds": 3.0005009,
+        "completion_seconds": 3.0577084,
+        "warmup_rfqs": 104,
+        "operations_attempted": 280,
+        "operations_completed": 280,
+        "successful_operations": 6,
+        "business_rejected_operations": 274,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 12,
+        "distinct_traders_with_rfq": 6,
+        "buy_rfqs_created": 3,
+        "sell_rfqs_created": 3,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 91.57184511119503,
+        "stages": {
+          "accept": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 31.6952,
+              "p95_ms": 35.8824,
+              "p99_ms": 35.8824,
+              "max_ms": 35.8824
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 31.6952,
+              "p95_ms": 35.8824,
+              "p99_ms": 35.8824,
+              "max_ms": 35.8824
+            }
+          },
+          "operation": {
+            "attempted": 280,
+            "successful": 6,
+            "business_rejected": 274,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 274,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 280,
+              "p50_ms": 8.1972,
+              "p95_ms": 12.3696,
+              "p99_ms": 62.3569,
+              "max_ms": 306.6834
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 61.722,
+              "p95_ms": 68.2723,
+              "p99_ms": 68.2723,
+              "max_ms": 68.2723
+            }
+          },
+          "rfq": {
+            "attempted": 280,
+            "successful": 6,
+            "business_rejected": 274,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 274,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 280,
+              "p50_ms": 8.1972,
+              "p95_ms": 12.3696,
+              "p99_ms": 25.7993,
+              "max_ms": 306.6834
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 14.304,
+              "p95_ms": 16.0712,
+              "p99_ms": 16.0712,
+              "max_ms": 16.0712
+            }
+          },
+          "sign_local": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 0.5104,
+              "p95_ms": 0.7087,
+              "p99_ms": 0.7087,
+              "max_ms": 0.7087
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 0.5104,
+              "p95_ms": 0.7087,
+              "p99_ms": 0.7087,
+              "max_ms": 0.7087
+            }
+          },
+          "terms": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 13.8218,
+              "p95_ms": 14.9769,
+              "p99_ms": 14.9769,
+              "max_ms": 14.9769
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 13.8218,
+              "p95_ms": 14.9769,
+              "p99_ms": 14.9769,
+              "max_ms": 14.9769
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 6,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 1,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:03:50.1658388Z",
+        "admission_seconds": 3.0002584,
+        "completion_seconds": 3.0013168,
+        "warmup_rfqs": 105,
+        "operations_attempted": 298,
+        "operations_completed": 298,
+        "successful_operations": 6,
+        "business_rejected_operations": 292,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 12,
+        "distinct_traders_with_rfq": 6,
+        "buy_rfqs_created": 3,
+        "sell_rfqs_created": 3,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 99.28975175163114,
+        "stages": {
+          "accept": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 32.4149,
+              "p95_ms": 56.0017,
+              "p99_ms": 56.0017,
+              "max_ms": 56.0017
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 32.4149,
+              "p95_ms": 56.0017,
+              "p99_ms": 56.0017,
+              "max_ms": 56.0017
+            }
+          },
+          "operation": {
+            "attempted": 298,
+            "successful": 6,
+            "business_rejected": 292,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 292,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 298,
+              "p50_ms": 8.0784,
+              "p95_ms": 13.6645,
+              "p99_ms": 63.5848,
+              "max_ms": 139.0512
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 62.5818,
+              "p95_ms": 139.0512,
+              "p99_ms": 139.0512,
+              "max_ms": 139.0512
+            }
+          },
+          "rfq": {
+            "attempted": 298,
+            "successful": 6,
+            "business_rejected": 292,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 292,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 298,
+              "p50_ms": 8.0784,
+              "p95_ms": 13.6645,
+              "p99_ms": 24.328,
+              "max_ms": 32.373
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 14.2929,
+              "p95_ms": 14.7809,
+              "p99_ms": 14.7809,
+              "max_ms": 14.7809
+            }
+          },
+          "sign_local": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 0,
+              "p95_ms": 0.6932,
+              "p99_ms": 0.6932,
+              "max_ms": 0.6932
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 0,
+              "p95_ms": 0.6932,
+              "p99_ms": 0.6932,
+              "max_ms": 0.6932
+            }
+          },
+          "terms": {
+            "attempted": 6,
+            "successful": 6,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 6,
+              "p50_ms": 14.7237,
+              "p95_ms": 66.8894,
+              "p99_ms": 66.8894,
+              "max_ms": 66.8894
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 14.7237,
+              "p95_ms": 66.8894,
+              "p99_ms": 66.8894,
+              "max_ms": 66.8894
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 6,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 8,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:04:05.6963333Z",
+        "admission_seconds": 3.0005907,
+        "completion_seconds": 3.0915352,
+        "warmup_rfqs": 106,
+        "operations_attempted": 185,
+        "operations_completed": 185,
+        "successful_operations": 6,
+        "business_rejected_operations": 179,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 13,
+        "sell_rfqs_created": 11,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 59.84081953846102,
+        "stages": {
+          "accept": {
+            "attempted": 24,
+            "successful": 6,
+            "business_rejected": 18,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 251.2499,
+              "p95_ms": 356.9179,
+              "p99_ms": 367.6739,
+              "max_ms": 367.6739
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 270.1828,
+              "p95_ms": 367.6739,
+              "p99_ms": 367.6739,
+              "max_ms": 367.6739
+            }
+          },
+          "operation": {
+            "attempted": 185,
+            "successful": 6,
+            "business_rejected": 179,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "NO_EXECUTABLE_QUOTE": 161,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 185,
+              "p50_ms": 75.5834,
+              "p95_ms": 515.9765,
+              "p99_ms": 588.3239,
+              "max_ms": 597.6991
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 515.9765,
+              "p95_ms": 597.6991,
+              "p99_ms": 597.6991,
+              "max_ms": 597.6991
+            }
+          },
+          "rfq": {
+            "attempted": 185,
+            "successful": 24,
+            "business_rejected": 161,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 161,
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 185,
+              "p50_ms": 75.1869,
+              "p95_ms": 108.8314,
+              "p99_ms": 135.3258,
+              "max_ms": 137.8572
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 99.2375,
+              "p95_ms": 135.3258,
+              "p99_ms": 137.8572,
+              "max_ms": 137.8572
+            }
+          },
+          "sign_local": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0.6809,
+              "p99_ms": 1.2418,
+              "max_ms": 1.2418
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0.6809,
+              "p99_ms": 1.2418,
+              "max_ms": 1.2418
+            }
+          },
+          "terms": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 140.6683,
+              "p95_ms": 187.0581,
+              "p99_ms": 192.0181,
+              "max_ms": 192.0181
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 140.6683,
+              "p95_ms": 187.0581,
+              "p99_ms": 192.0181,
+              "max_ms": 192.0181
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 24,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 8,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:04:23.3030259Z",
+        "admission_seconds": 3.0005068,
+        "completion_seconds": 3.0703675,
+        "warmup_rfqs": 97,
+        "operations_attempted": 183,
+        "operations_completed": 183,
+        "successful_operations": 6,
+        "business_rejected_operations": 177,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 13,
+        "sell_rfqs_created": 11,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 59.60198575577679,
+        "stages": {
+          "accept": {
+            "attempted": 24,
+            "successful": 6,
+            "business_rejected": 18,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 244.599,
+              "p95_ms": 288.4202,
+              "p99_ms": 301.0474,
+              "max_ms": 301.0474
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 253.5261,
+              "p95_ms": 301.0474,
+              "p99_ms": 301.0474,
+              "max_ms": 301.0474
+            }
+          },
+          "operation": {
+            "attempted": 183,
+            "successful": 6,
+            "business_rejected": 177,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "NO_EXECUTABLE_QUOTE": 159,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 183,
+              "p50_ms": 83.2109,
+              "p95_ms": 459.8071,
+              "p99_ms": 509.6849,
+              "max_ms": 521.4111
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 439.782,
+              "p95_ms": 509.6849,
+              "p99_ms": 509.6849,
+              "max_ms": 509.6849
+            }
+          },
+          "rfq": {
+            "attempted": 183,
+            "successful": 24,
+            "business_rejected": 159,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 159,
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 183,
+              "p50_ms": 81.5573,
+              "p95_ms": 98.2593,
+              "p99_ms": 121.8772,
+              "max_ms": 124.6693
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 84.2763,
+              "p95_ms": 121.8772,
+              "p99_ms": 124.6693,
+              "max_ms": 124.6693
+            }
+          },
+          "sign_local": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0.6267,
+              "max_ms": 0.6267
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0.6267,
+              "max_ms": 0.6267
+            }
+          },
+          "terms": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 122.1999,
+              "p95_ms": 139.6526,
+              "p99_ms": 157.7301,
+              "max_ms": 157.7301
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 122.1999,
+              "p95_ms": 139.6526,
+              "p99_ms": 157.7301,
+              "max_ms": 157.7301
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 24,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "accept",
+      "concurrency": 8,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "accept",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 10000,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "600",
+          "max_quantity": "700"
+        },
+        "started_utc": "2026-11-16T23:04:40.0965678Z",
+        "admission_seconds": 3.0004834,
+        "completion_seconds": 3.0614844,
+        "warmup_rfqs": 96,
+        "operations_attempted": 217,
+        "operations_completed": 217,
+        "successful_operations": 6,
+        "business_rejected_operations": 211,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 13,
+        "sell_rfqs_created": 11,
+        "acceptances_acknowledged": 6,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 70.88064861607657,
+        "stages": {
+          "accept": {
+            "attempted": 24,
+            "successful": 6,
+            "business_rejected": 18,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 201.032,
+              "p95_ms": 249.9802,
+              "p99_ms": 259.8659,
+              "max_ms": 259.8659
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 209.4654,
+              "p95_ms": 259.8659,
+              "p99_ms": 259.8659,
+              "max_ms": 259.8659
+            }
+          },
+          "operation": {
+            "attempted": 217,
+            "successful": 6,
+            "business_rejected": 211,
+            "technical_errors": 0,
+            "codes": {
+              "INSUFFICIENT_INVENTORY": 18,
+              "NO_EXECUTABLE_QUOTE": 193,
+              "success": 6
+            },
+            "latency_all_responses": {
+              "count": 217,
+              "p50_ms": 75.5775,
+              "p95_ms": 383.1453,
+              "p99_ms": 463.3609,
+              "max_ms": 465.1491
+            },
+            "latency_success": {
+              "count": 6,
+              "p50_ms": 380.9429,
+              "p95_ms": 461.6513,
+              "p99_ms": 461.6513,
+              "max_ms": 461.6513
+            }
+          },
+          "rfq": {
+            "attempted": 217,
+            "successful": 24,
+            "business_rejected": 193,
+            "technical_errors": 0,
+            "codes": {
+              "NO_EXECUTABLE_QUOTE": 193,
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 217,
+              "p50_ms": 74.7797,
+              "p95_ms": 93.4812,
+              "p99_ms": 108.3527,
+              "max_ms": 116.3606
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 78.418,
+              "p95_ms": 108.7829,
+              "p99_ms": 116.3606,
+              "max_ms": 116.3606
+            }
+          },
+          "sign_local": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0.5584,
+              "p99_ms": 0.5688,
+              "max_ms": 0.5688
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 0,
+              "p95_ms": 0.5584,
+              "p99_ms": 0.5688,
+              "max_ms": 0.5688
+            }
+          },
+          "terms": {
+            "attempted": 24,
+            "successful": 24,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 24
+            },
+            "latency_all_responses": {
+              "count": 24,
+              "p50_ms": 108.6454,
+              "p95_ms": 138.601,
+              "p99_ms": 138.9368,
+              "max_ms": 138.9368
+            },
+            "latency_success": {
+              "count": 24,
+              "p50_ms": 108.6454,
+              "p95_ms": 138.601,
+              "p99_ms": 138.9368,
+              "max_ms": 138.9368
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 24,
+          "trades": 6,
+          "settled": 0,
+          "pending": 6,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 1,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:04:56.3000498Z",
+        "admission_seconds": 3.0004393,
+        "completion_seconds": 4.0198577,
+        "warmup_rfqs": 103,
+        "operations_attempted": 2,
+        "operations_completed": 2,
+        "successful_operations": 2,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 6,
+        "distinct_traders_with_rfq": 2,
+        "buy_rfqs_created": 1,
+        "sell_rfqs_created": 1,
+        "acceptances_acknowledged": 2,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 0.4975300493845839,
+        "stages": {
+          "accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 27.3743,
+              "p95_ms": 38.0893,
+              "p99_ms": 38.0893,
+              "max_ms": 38.0893
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 27.3743,
+              "p95_ms": 38.0893,
+              "p99_ms": 38.0893,
+              "max_ms": 38.0893
+            }
+          },
+          "operation": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1951.7581,
+              "p95_ms": 2068.0996,
+              "p99_ms": 2068.0996,
+              "max_ms": 2068.0996
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1951.7581,
+              "p95_ms": 2068.0996,
+              "p99_ms": 2068.0996,
+              "max_ms": 2068.0996
+            }
+          },
+          "poll": {
+            "attempted": 41,
+            "successful": 41,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 41
+            },
+            "latency_all_responses": {
+              "count": 41,
+              "p50_ms": 0,
+              "p95_ms": 1.4057,
+              "p99_ms": 1.5994,
+              "max_ms": 1.5994
+            },
+            "latency_success": {
+              "count": 41,
+              "p50_ms": 0,
+              "p95_ms": 1.4057,
+              "p99_ms": 1.5994,
+              "max_ms": 1.5994
+            }
+          },
+          "rfq": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 11.3564,
+              "p95_ms": 13.5586,
+              "p99_ms": 13.5586,
+              "max_ms": 13.5586
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 11.3564,
+              "p95_ms": 13.5586,
+              "p99_ms": 13.5586,
+              "max_ms": 13.5586
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1928.1616,
+              "p95_ms": 2039.5931,
+              "p99_ms": 2039.5931,
+              "max_ms": 2039.5931
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1928.1616,
+              "p95_ms": 2039.5931,
+              "p99_ms": 2039.5931,
+              "max_ms": 2039.5931
+            }
+          },
+          "sign_local": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0.6666,
+              "p99_ms": 0.6666,
+              "max_ms": 0.6666
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0.6666,
+              "p99_ms": 0.6666,
+              "max_ms": 0.6666
+            }
+          },
+          "terms": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 11.5735,
+              "p95_ms": 14.4379,
+              "p99_ms": 14.4379,
+              "max_ms": 14.4379
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 11.5735,
+              "p95_ms": 14.4379,
+              "p99_ms": 14.4379,
+              "max_ms": 14.4379
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 2,
+          "trades": 2,
+          "settled": 2,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 1,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:05:12.8226154Z",
+        "admission_seconds": 3.0004112,
+        "completion_seconds": 3.8221368,
+        "warmup_rfqs": 111,
+        "operations_attempted": 2,
+        "operations_completed": 2,
+        "successful_operations": 2,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 6,
+        "distinct_traders_with_rfq": 2,
+        "buy_rfqs_created": 1,
+        "sell_rfqs_created": 1,
+        "acceptances_acknowledged": 2,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 0.5232675083738499,
+        "stages": {
+          "accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 36.7623,
+              "p95_ms": 121.1194,
+              "p99_ms": 121.1194,
+              "max_ms": 121.1194
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 36.7623,
+              "p95_ms": 121.1194,
+              "p99_ms": 121.1194,
+              "max_ms": 121.1194
+            }
+          },
+          "operation": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1868.206,
+              "p95_ms": 1953.9308,
+              "p99_ms": 1953.9308,
+              "max_ms": 1953.9308
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1868.206,
+              "p95_ms": 1953.9308,
+              "p99_ms": 1953.9308,
+              "max_ms": 1953.9308
+            }
+          },
+          "poll": {
+            "attempted": 38,
+            "successful": 38,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 38
+            },
+            "latency_all_responses": {
+              "count": 38,
+              "p50_ms": 0,
+              "p95_ms": 1.2854,
+              "p99_ms": 1.3122,
+              "max_ms": 1.3122
+            },
+            "latency_success": {
+              "count": 38,
+              "p50_ms": 0,
+              "p95_ms": 1.2854,
+              "p99_ms": 1.3122,
+              "max_ms": 1.3122
+            }
+          },
+          "rfq": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 14.2958,
+              "p95_ms": 14.5911,
+              "p99_ms": 14.5911,
+              "max_ms": 14.5911
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 14.2958,
+              "p95_ms": 14.5911,
+              "p99_ms": 14.5911,
+              "max_ms": 14.5911
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1837.8725,
+              "p95_ms": 1923.1585,
+              "p99_ms": 1923.1585,
+              "max_ms": 1923.1585
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1837.8725,
+              "p95_ms": 1923.1585,
+              "p99_ms": 1923.1585,
+              "max_ms": 1923.1585
+            }
+          },
+          "sign_local": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0,
+              "max_ms": 0
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0,
+              "max_ms": 0
+            }
+          },
+          "terms": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 15.2363,
+              "p95_ms": 16.4765,
+              "p99_ms": 16.4765,
+              "max_ms": 16.4765
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 15.2363,
+              "p95_ms": 16.4765,
+              "p99_ms": 16.4765,
+              "max_ms": 16.4765
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 2,
+          "trades": 2,
+          "settled": 2,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 1,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 1,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:05:29.8401275Z",
+        "admission_seconds": 3.000223,
+        "completion_seconds": 3.1118767,
+        "warmup_rfqs": 103,
+        "operations_attempted": 2,
+        "operations_completed": 2,
+        "successful_operations": 2,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 6,
+        "distinct_traders_with_rfq": 2,
+        "buy_rfqs_created": 1,
+        "sell_rfqs_created": 1,
+        "acceptances_acknowledged": 2,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 0.642698986113428,
+        "stages": {
+          "accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 24.7525,
+              "p95_ms": 34.8978,
+              "p99_ms": 34.8978,
+              "max_ms": 34.8978
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 24.7525,
+              "p95_ms": 34.8978,
+              "p99_ms": 34.8978,
+              "max_ms": 34.8978
+            }
+          },
+          "operation": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1162.9982,
+              "p95_ms": 1948.8785,
+              "p99_ms": 1948.8785,
+              "max_ms": 1948.8785
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1162.9982,
+              "p95_ms": 1948.8785,
+              "p99_ms": 1948.8785,
+              "max_ms": 1948.8785
+            }
+          },
+          "poll": {
+            "attempted": 32,
+            "successful": 32,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 32
+            },
+            "latency_all_responses": {
+              "count": 32,
+              "p50_ms": 0,
+              "p95_ms": 1.3296,
+              "p99_ms": 12.5163,
+              "max_ms": 12.5163
+            },
+            "latency_success": {
+              "count": 32,
+              "p50_ms": 0,
+              "p95_ms": 1.3296,
+              "p99_ms": 12.5163,
+              "max_ms": 12.5163
+            }
+          },
+          "rfq": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 11.6277,
+              "p95_ms": 13.9232,
+              "p99_ms": 13.9232,
+              "max_ms": 13.9232
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 11.6277,
+              "p95_ms": 13.9232,
+              "p99_ms": 13.9232,
+              "max_ms": 13.9232
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 1135.8872,
+              "p95_ms": 1926.0546,
+              "p99_ms": 1926.0546,
+              "max_ms": 1926.0546
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 1135.8872,
+              "p95_ms": 1926.0546,
+              "p99_ms": 1926.0546,
+              "max_ms": 1926.0546
+            }
+          },
+          "sign_local": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0,
+              "max_ms": 0
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "p99_ms": 0,
+              "max_ms": 0
+            }
+          },
+          "terms": {
+            "attempted": 2,
+            "successful": 2,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 2
+            },
+            "latency_all_responses": {
+              "count": 2,
+              "p50_ms": 10.4667,
+              "p95_ms": 12.6751,
+              "p99_ms": 12.6751,
+              "max_ms": 12.6751
+            },
+            "latency_success": {
+              "count": 2,
+              "p50_ms": 10.4667,
+              "p95_ms": 12.6751,
+              "p99_ms": 12.6751,
+              "max_ms": 12.6751
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 2,
+          "trades": 2,
+          "settled": 2,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 8,
+      "repetition": 1,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:05:45.0283218Z",
+        "admission_seconds": 3.0003531,
+        "completion_seconds": 4.1874728,
+        "warmup_rfqs": 107,
+        "operations_attempted": 16,
+        "operations_completed": 16,
+        "successful_operations": 16,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 8,
+        "sell_rfqs_created": 8,
+        "acceptances_acknowledged": 16,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 3.8209203412616795,
+        "stages": {
+          "accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 207.2756,
+              "p95_ms": 237.5357,
+              "p99_ms": 237.5357,
+              "max_ms": 237.5357
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 207.2756,
+              "p95_ms": 237.5357,
+              "p99_ms": 237.5357,
+              "max_ms": 237.5357
+            }
+          },
+          "operation": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 2047.4243,
+              "p95_ms": 2132.8732,
+              "p99_ms": 2132.8732,
+              "max_ms": 2132.8732
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 2047.4243,
+              "p95_ms": 2132.8732,
+              "p99_ms": 2132.8732,
+              "max_ms": 2132.8732
+            }
+          },
+          "poll": {
+            "attempted": 285,
+            "successful": 285,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 285
+            },
+            "latency_all_responses": {
+              "count": 285,
+              "p50_ms": 0,
+              "p95_ms": 1.3054,
+              "p99_ms": 11.5186,
+              "max_ms": 47.8163
+            },
+            "latency_success": {
+              "count": 285,
+              "p50_ms": 0,
+              "p95_ms": 1.3054,
+              "p99_ms": 11.5186,
+              "max_ms": 47.8163
+            }
+          },
+          "rfq": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 56.3645,
+              "p95_ms": 110.588,
+              "p99_ms": 110.588,
+              "max_ms": 110.588
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 56.3645,
+              "p95_ms": 110.588,
+              "p99_ms": 110.588,
+              "max_ms": 110.588
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 1888.9624,
+              "p95_ms": 2008.8671,
+              "p99_ms": 2008.8671,
+              "max_ms": 2008.8671
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 1888.9624,
+              "p95_ms": 2008.8671,
+              "p99_ms": 2008.8671,
+              "max_ms": 2008.8671
+            }
+          },
+          "sign_local": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.7183,
+              "p99_ms": 0.7183,
+              "max_ms": 0.7183
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.7183,
+              "p99_ms": 0.7183,
+              "max_ms": 0.7183
+            }
+          },
+          "terms": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 95.3935,
+              "p95_ms": 111.6694,
+              "p99_ms": 111.6694,
+              "max_ms": 111.6694
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 95.3935,
+              "p95_ms": 111.6694,
+              "p99_ms": 111.6694,
+              "max_ms": 111.6694
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 16,
+          "trades": 16,
+          "settled": 16,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 8,
+      "repetition": 2,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:06:03.2352378Z",
+        "admission_seconds": 3.0021453,
+        "completion_seconds": 4.2659811,
+        "warmup_rfqs": 105,
+        "operations_attempted": 16,
+        "operations_completed": 16,
+        "successful_operations": 16,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 8,
+        "sell_rfqs_created": 8,
+        "acceptances_acknowledged": 16,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 3.7506026456610413,
+        "stages": {
+          "accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 233.9187,
+              "p95_ms": 259.2083,
+              "p99_ms": 259.2083,
+              "max_ms": 259.2083
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 233.9187,
+              "p95_ms": 259.2083,
+              "p99_ms": 259.2083,
+              "max_ms": 259.2083
+            }
+          },
+          "operation": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 1965.6309,
+              "p95_ms": 2326.6669,
+              "p99_ms": 2326.6669,
+              "max_ms": 2326.6669
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 1965.6309,
+              "p95_ms": 2326.6669,
+              "p99_ms": 2326.6669,
+              "max_ms": 2326.6669
+            }
+          },
+          "poll": {
+            "attempted": 287,
+            "successful": 287,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 287
+            },
+            "latency_all_responses": {
+              "count": 287,
+              "p50_ms": 0,
+              "p95_ms": 3.3778,
+              "p99_ms": 19.7794,
+              "max_ms": 37.6937
+            },
+            "latency_success": {
+              "count": 287,
+              "p50_ms": 0,
+              "p95_ms": 3.3778,
+              "p99_ms": 19.7794,
+              "max_ms": 37.6937
+            }
+          },
+          "rfq": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 52.4276,
+              "p95_ms": 117.7447,
+              "p99_ms": 117.7447,
+              "max_ms": 117.7447
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 52.4276,
+              "p95_ms": 117.7447,
+              "p99_ms": 117.7447,
+              "max_ms": 117.7447
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 1915.5228,
+              "p95_ms": 2138.7856,
+              "p99_ms": 2138.7856,
+              "max_ms": 2138.7856
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 1915.5228,
+              "p95_ms": 2138.7856,
+              "p99_ms": 2138.7856,
+              "max_ms": 2138.7856
+            }
+          },
+          "sign_local": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.5448,
+              "p99_ms": 0.5448,
+              "max_ms": 0.5448
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.5448,
+              "p99_ms": 0.5448,
+              "max_ms": 0.5448
+            }
+          },
+          "terms": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 110.1409,
+              "p95_ms": 133.8047,
+              "p99_ms": 133.8047,
+              "max_ms": 133.8047
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 110.1409,
+              "p95_ms": 133.8047,
+              "p99_ms": 133.8047,
+              "max_ms": 133.8047
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 16,
+          "trades": 16,
+          "settled": 16,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "mode": "settlement",
+      "concurrency": 8,
+      "repetition": 3,
+      "report": {
+        "options": {
+          "api": "http://127.0.0.1:38080",
+          "rpc": "http://127.0.0.1:38545",
+          "mode": "settlement",
+          "traders": 8,
+          "concurrency": 8,
+          "duration_ns": 3000000000,
+          "request_timeout_ns": 5000000000,
+          "drain_timeout_ns": 60000000000,
+          "warmup_ns": 1000000000,
+          "seed": 42,
+          "max_requests": 100,
+          "buy_percent": 50,
+          "accept_percent": 100,
+          "min_quantity": "0.01",
+          "max_quantity": "0.1"
+        },
+        "started_utc": "2026-11-16T23:06:19.8129695Z",
+        "admission_seconds": 3.000479,
+        "completion_seconds": 4.155646,
+        "warmup_rfqs": 105,
+        "operations_attempted": 16,
+        "operations_completed": 16,
+        "successful_operations": 16,
+        "business_rejected_operations": 0,
+        "technical_error_operations": 0,
+        "quotes_ignored": 0,
+        "quotes_received": 48,
+        "distinct_traders_with_rfq": 8,
+        "buy_rfqs_created": 8,
+        "sell_rfqs_created": 8,
+        "acceptances_acknowledged": 16,
+        "cancelled": false,
+        "completed_operations_per_second_including_drain": 3.8501835815658985,
+        "stages": {
+          "accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 234.2814,
+              "p95_ms": 271.2415,
+              "p99_ms": 271.2415,
+              "max_ms": 271.2415
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 234.2814,
+              "p95_ms": 271.2415,
+              "p99_ms": 271.2415,
+              "max_ms": 271.2415
+            }
+          },
+          "operation": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 2032.1256,
+              "p95_ms": 2170.7989,
+              "p99_ms": 2170.7989,
+              "max_ms": 2170.7989
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 2032.1256,
+              "p95_ms": 2170.7989,
+              "p99_ms": 2170.7989,
+              "max_ms": 2170.7989
+            }
+          },
+          "poll": {
+            "attempted": 280,
+            "successful": 280,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 280
+            },
+            "latency_all_responses": {
+              "count": 280,
+              "p50_ms": 0,
+              "p95_ms": 1.436,
+              "p99_ms": 11.5105,
+              "max_ms": 11.8912
+            },
+            "latency_success": {
+              "count": 280,
+              "p50_ms": 0,
+              "p95_ms": 1.436,
+              "p99_ms": 11.5105,
+              "max_ms": 11.8912
+            }
+          },
+          "rfq": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 60.4445,
+              "p95_ms": 169.2445,
+              "p99_ms": 169.2445,
+              "max_ms": 169.2445
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 60.4445,
+              "p95_ms": 169.2445,
+              "p99_ms": 169.2445,
+              "max_ms": 169.2445
+            }
+          },
+          "settlement_from_accept": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 1934.9887,
+              "p95_ms": 2003.4056,
+              "p99_ms": 2003.4056,
+              "max_ms": 2003.4056
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 1934.9887,
+              "p95_ms": 2003.4056,
+              "p99_ms": 2003.4056,
+              "max_ms": 2003.4056
+            }
+          },
+          "sign_local": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.6939,
+              "p99_ms": 0.6939,
+              "max_ms": 0.6939
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 0,
+              "p95_ms": 0.6939,
+              "p99_ms": 0.6939,
+              "max_ms": 0.6939
+            }
+          },
+          "terms": {
+            "attempted": 16,
+            "successful": 16,
+            "business_rejected": 0,
+            "technical_errors": 0,
+            "codes": {
+              "success": 16
+            },
+            "latency_all_responses": {
+              "count": 16,
+              "p50_ms": 106.709,
+              "p95_ms": 176.9953,
+              "p99_ms": 176.9953,
+              "max_ms": 176.9953
+            },
+            "latency_success": {
+              "count": 16,
+              "p50_ms": 106.709,
+              "p95_ms": 176.9953,
+              "p99_ms": 176.9953,
+              "max_ms": 176.9953
+            }
+          }
+        },
+        "invariants": {
+          "passed": true,
+          "checked_rfqs": 16,
+          "trades": 16,
+          "settled": 16,
+          "pending": 0,
+          "failed": 0,
+          "errors": []
+        }
+      }
+    }
+  ],
+  "mixed": {
+    "options": {
+      "api": "http://127.0.0.1:38080",
+      "rpc": "http://127.0.0.1:38545",
+      "mode": "settlement",
+      "traders": 4,
+      "concurrency": 4,
+      "duration_ns": 3000000000,
+      "request_timeout_ns": 5000000000,
+      "drain_timeout_ns": 60000000000,
+      "warmup_ns": 0,
+      "seed": 42,
+      "max_requests": 16,
+      "buy_percent": 50,
+      "accept_percent": 50,
+      "min_quantity": "0.01",
+      "max_quantity": "0.1"
+    },
+    "started_utc": "2026-11-16T23:00:20.8979016Z",
+    "admission_seconds": 3.0004186,
+    "completion_seconds": 5.7444813,
+    "warmup_rfqs": 0,
+    "operations_attempted": 13,
+    "operations_completed": 13,
+    "successful_operations": 13,
+    "business_rejected_operations": 0,
+    "technical_error_operations": 0,
+    "quotes_ignored": 7,
+    "quotes_received": 39,
+    "distinct_traders_with_rfq": 4,
+    "buy_rfqs_created": 6,
+    "sell_rfqs_created": 7,
+    "acceptances_acknowledged": 6,
+    "cancelled": false,
+    "completed_operations_per_second_including_drain": 2.2630415734837537,
+    "stages": {
+      "accept": {
+        "attempted": 6,
+        "successful": 6,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 6
+        },
+        "latency_all_responses": {
+          "count": 6,
+          "p50_ms": 25.2201,
+          "p95_ms": 40.1156,
+          "p99_ms": 40.1156,
+          "max_ms": 40.1156
+        },
+        "latency_success": {
+          "count": 6,
+          "p50_ms": 25.2201,
+          "p95_ms": 40.1156,
+          "p99_ms": 40.1156,
+          "max_ms": 40.1156
+        }
+      },
+      "operation": {
+        "attempted": 13,
+        "successful": 13,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 13
+        },
+        "latency_all_responses": {
+          "count": 13,
+          "p50_ms": 21.0201,
+          "p95_ms": 2026.7815,
+          "p99_ms": 2026.7815,
+          "max_ms": 2026.7815
+        },
+        "latency_success": {
+          "count": 13,
+          "p50_ms": 21.0201,
+          "p95_ms": 2026.7815,
+          "p99_ms": 2026.7815,
+          "max_ms": 2026.7815
+        }
+      },
+      "poll": {
+        "attempted": 115,
+        "successful": 115,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 115
+        },
+        "latency_all_responses": {
+          "count": 115,
+          "p50_ms": 0.5078,
+          "p95_ms": 0.715,
+          "p99_ms": 1.0135,
+          "max_ms": 9.3495
+        },
+        "latency_success": {
+          "count": 115,
+          "p50_ms": 0.5078,
+          "p95_ms": 0.715,
+          "p99_ms": 1.0135,
+          "max_ms": 9.3495
+        }
+      },
+      "rfq": {
+        "attempted": 13,
+        "successful": 13,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 13
+        },
+        "latency_all_responses": {
+          "count": 13,
+          "p50_ms": 10.2432,
+          "p95_ms": 21.0201,
+          "p99_ms": 21.0201,
+          "max_ms": 21.0201
+        },
+        "latency_success": {
+          "count": 13,
+          "p50_ms": 10.2432,
+          "p95_ms": 21.0201,
+          "p99_ms": 21.0201,
+          "max_ms": 21.0201
+        }
+      },
+      "settlement_from_accept": {
+        "attempted": 6,
+        "successful": 6,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 6
+        },
+        "latency_all_responses": {
+          "count": 6,
+          "p50_ms": 1741.7355,
+          "p95_ms": 2015.0442,
+          "p99_ms": 2015.0442,
+          "max_ms": 2015.0442
+        },
+        "latency_success": {
+          "count": 6,
+          "p50_ms": 1741.7355,
+          "p95_ms": 2015.0442,
+          "p99_ms": 2015.0442,
+          "max_ms": 2015.0442
+        }
+      },
+      "sign_local": {
+        "attempted": 6,
+        "successful": 6,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 6
+        },
+        "latency_all_responses": {
+          "count": 6,
+          "p50_ms": 0.5273,
+          "p95_ms": 0.6662,
+          "p99_ms": 0.6662,
+          "max_ms": 0.6662
+        },
+        "latency_success": {
+          "count": 6,
+          "p50_ms": 0.5273,
+          "p95_ms": 0.6662,
+          "p99_ms": 0.6662,
+          "max_ms": 0.6662
+        }
+      },
+      "terms": {
+        "attempted": 6,
+        "successful": 6,
+        "business_rejected": 0,
+        "technical_errors": 0,
+        "codes": {
+          "success": 6
+        },
+        "latency_all_responses": {
+          "count": 6,
+          "p50_ms": 11.999,
+          "p95_ms": 12.3518,
+          "p99_ms": 12.3518,
+          "max_ms": 12.3518
+        },
+        "latency_success": {
+          "count": 6,
+          "p50_ms": 11.999,
+          "p95_ms": 12.3518,
+          "p99_ms": 12.3518,
+          "max_ms": 12.3518
+        }
+      }
+    },
+    "invariants": {
+      "passed": true,
+      "checked_rfqs": 13,
+      "trades": 6,
+      "settled": 6,
+      "pending": 0,
+      "failed": 0,
+      "errors": []
+    }
+  }
+}

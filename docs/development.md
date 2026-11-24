@@ -1,173 +1,89 @@
-# Lancer et tester
+# Setup and usage
 
-## Prérequis et première installation
+Run these commands from the repository root in Windows PowerShell. The launchers use native Windows tools and a local Anvil chain.
 
-Le parcours vérifié est Windows natif / PowerShell, sans Docker ni WSL. Chaque commande indique son dossier. Les versions ci-dessous décrivent l'environnement validé, pas les dernières versions disponibles.
+## Prerequisites
 
-- Go : cible `1.26.8`, langage minimum `1.26.0` dans `backend/go.mod`.
-- Rust : `1.98.1` dans `rust-toolchain.toml`, avec rustfmt, Clippy et linker MSVC (Visual Studio Build Tools, workload C++ et Windows SDK). Langage minimum du package : `1.94`.
-- Node : contrainte `^20.19.0 || >=22.12.0` dans `web/package.json`. Environnement testé : Node `24.22.1`, npm `11.19.1`.
-- Foundry : Forge/Anvil `1.9.0`. Solidity `0.8.30`, EVM `cancun`.
+Install Go, Rust via `rustup`, Node.js with npm, and Foundry (`forge`, `anvil` and `cast`). On Windows, Rust also needs the MSVC C++ Build Tools and Windows SDK.
 
-Depuis la racine, une fois par nouveau checkout :
+Install the repository dependencies once per checkout:
 
 ```powershell
-Push-Location contracts
-./install-deps.ps1
-Pop-Location
-Push-Location web
-npm.cmd ci --ignore-scripts
-Pop-Location
+.\contracts\install-deps.ps1
+npm ci --prefix web --ignore-scripts
 ```
 
-`npm ci` installe les bibliothèques du frontend, pas les tokens ni le wallet. Inutile de le répéter à chaque lancement. Le script Foundry installe OpenZeppelin 5.4.0 et forge-std 1.9.7 à des commits épinglés, sans sous-module. Go et Cargo téléchargent leurs dépendances au premier build ; conserver `go.sum`, `Cargo.lock` et `package-lock.json`. Forge peut télécharger solc. Aucune installation globale de toolchain n'est automatisée par le dépôt.
-
-## Démo complète : un terminal
-
-Depuis la racine du dépôt, avec les prérequis et dépendances installés :
+## Fresh demo
 
 ```powershell
 .\scripts\demo.ps1
 ```
 
-Le script recharge le PATH enregistré pour retrouver les outils installés depuis l'ouverture de VS Code, sans modifier le PATH permanent. Il vérifie les dépendances et les ports 8545/8081/8080/5173, compile les composants, lance une chaîne Anvil vierge, déploie les contrats et démarre Rust, Go et le frontend. Il vérifie aussi une cotation via le proxy frontend avant d'afficher `DEMO PRETE`.
+The script builds the application, starts Anvil, deploys the contracts and funds the test wallets. Once the terminal reports readiness, open [127.0.0.1:5173](http://127.0.0.1:5173). You can request indicative quotes immediately. To execute a trade, connect the test wallet described below and request a fresh quote.
 
-Ouvrir **http://127.0.0.1:5173**, puis suivre l'essai MetaMask ci-dessous. Le compte déjà importé reste utilisable. Fermer les anciens onglets de démo pour ne pas conserver le suivi d'un trade de la session précédente.
+Keep the terminal open. Ctrl+C stops the demo. Each run starts with fresh balances and market state. Startup and application logs are under `.cache/demo/`.
 
-Garder le terminal ouvert ; **Ctrl+C** arrête les quatre processus lancés par le script, dans l'ordre inverse du démarrage. Un échec au démarrage ou la sortie d'un service provoque également leur arrêt. Le script refuse un port occupé ou une deuxième session et ne tue aucun service préexistant. Ne pas fermer brutalement le processus PowerShell : son bloc de nettoyage ne pourrait alors pas s'exécuter.
+## MetaMask
 
-Les logs stdout/stderr de chaque service sont conservés dans `.cache/demo/<session>/`. Le fichier de déploiement antérieur est restauré à l'arrêt ; il ne représente pas une chaîne encore active. Chaque relancement réinitialise les soldes et inventaires, sans restaurer les trades précédents. Le script de déploiement, Go et le frontend imposent Anvil 31337 ; les contrats eux-mêmes ne sont pas limités à ce réseau.
-
-Le frontend sert le build via Vite preview : les modifications de source demandent un relancement. Pour développer avec hot reload, utiliser le parcours manuel ci-dessous. Aucun outil global ni dépendance manquante n'est installé automatiquement.
-
-Pour une vérification bornée du démarrage et du nettoyage, `./scripts/demo.ps1 -RunSeconds 2` arrête la session deux secondes après qu'elle est prête. Ce contrôle ne signe aucun trade et ne remplace pas le test de settlement.
-
-Validation du lanceur le 15 novembre 2026 : démarrage complet avec cotation via le frontend, arrêt borné, refus d'un port occupé sans arrêt du listener existant, nettoyage après échec de déploiement, relancement et Ctrl+C avec vérification des quatre ports libérés. Le parcours MetaMask avait été confirmé manuellement par l'auteur avant l'ajout du lanceur ; il n'a pas été automatisé ici.
-
-Si PowerShell refuse l'exécution du script local, cette invocation autorise uniquement le processus lancé, sans changer la politique permanente :
+The deployment funds and approves token spending for the default Anvil trader at account index **1**, address `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`. Derive its public test private key locally with Foundry:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1
+cast wallet private-key 'test test test test test test test test test test test junk' 1
 ```
 
-## Alternative : quatre terminaux
+1. Import that account into MetaMask. Use Anvil test accounts only on the local chain.
+2. In the trader interface, select **Connect wallet** and approve **Anvil 31337**. The local RPC URL is `http://127.0.0.1:8545`.
+3. Request a BUY or SELL quote. You can enter a security quantity in tBILL or a cash amount in sEUR. For BUY, cash is a maximum budget. For SELL, it is minimum proceeds.
+4. Select **Sign and execute** on a quote before it expires. MetaMask signs the trade terms. The Go submitter pays gas and sends the transaction.
+5. Wait for `SETTLED`, then check the transaction hash and both wallet balances.
 
-Chaque terminal commence à la racine du dépôt. Garder les serveurs ouverts.
+The other preset accounts act as deployer and issuer (index 0), market makers (2–4) and settlement submitter (5). The deployment script handles their funding and approvals.
 
-**Terminal 1 — chaîne locale vierge**
+## Persistent market
+
+For your first setup, run:
 
 ```powershell
-anvil --host 127.0.0.1 --port 8545 --chain-id 31337 --hardfork cancun --block-time 1
+.\scripts\install-postgres.ps1
+.\scripts\postgres.ps1 -Action Init
+.\scripts\postgres.ps1 -Action Start
+.\scripts\postgres.ps1 -Action Migrate
+.\scripts\local-chain.ps1 -Initialize
 ```
 
-Un bloc par seconde permet aux deadlines on-chain d'avancer même sans autre transaction. Ne pas charger d'ancien état ni utiliser un fork distant.
-
-**Terminal 2 — déploiement, puis moteur Rust**
+Keep the chain terminal open. In a second terminal run:
 
 ```powershell
-Set-Location contracts
-forge script script/DeployLocal.s.sol:DeployLocal --rpc-url http://127.0.0.1:8545 --broadcast --non-interactive
-# Vérifier le succès du déploiement avant de continuer.
-Set-Location ../market-engine
-cargo run --locked
+.\scripts\start.ps1
 ```
 
-Le script finance les tokens et prépare les allowances trader/MM. Il écrit les adresses dans `contracts/deployments/31337.json`, lu par Go au démarrage.
+Open the same [trader interface](http://127.0.0.1:5173). Ctrl+C in the application terminal stops Go, Rust and the frontend. Restart `start.ps1` against the existing chain and database to resume. If you stopped all services, run `postgres.ps1 -Action Start` and `local-chain.ps1` without `-Initialize` first. Stop PostgreSQL with `.\scripts\postgres.ps1 -Action Stop`.
 
-**Terminal 3 — backend Go**
+The installer verifies the archive checksum and extracts binaries under `.cache/tools/`. It requires no Windows service. The demo database is stored in `.cache/postgres/demo/`, and Anvil saves its chain under `.cache/local-market/`. PostgreSQL uses trusted loopback connections for this local setup. Keep both data directories together. The periodic chain dump and database are separate writes, so they do not form an atomic backup.
 
-```powershell
-Set-Location backend
-go run ./cmd/rfq-dvp-market-api -deployment ../contracts/deployments/31337.json -rpc http://127.0.0.1:8545
-```
+## Verification
 
-**Terminal 4 — frontend**
+After installing the repository dependencies, use the [versions pinned for CI](../scripts/toolchains.json) to run the full suite:
 
 ```powershell
-Set-Location web
-npm run dev
-```
-
-Ouvrir `http://127.0.0.1:5173`. Go écoute sur 8080, Rust sur 8081 et Anvil sur 8545. Vite relaie `/api` vers Go. `GET /healthz` indique seulement que le serveur répond, pas que ses dépendances fonctionnent.
-
-## Essai MetaMask
-
-1. Importer le compte **index 1** du mnemonic public standard affiché par Anvil : adresse trader `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`. La clé commençant par `0xac09` est celle de l'index 0, l'issuer, pas celle du trader.
-2. Cliquer sur « Connecter le wallet ». Accepter le passage sur Anvil 31337, RPC `http://127.0.0.1:8545`.
-3. Demander BUY ou SELL en tBILL ou sEUR, puis « Signer et exécuter » avant l'expiration de la quote (120 s).
-4. Signer le message EIP-712. Go envoie la transaction et paie le gas depuis l'index 5. Attendre `SETTLED`, le hash et les soldes actualisés.
-
-Indices de la démo : 0 issuer, 1 trader, 2–4 MM1–MM3, 5 submitter. Ce sont des comptes de test publiquement connus, exclusivement pour la chaîne locale.
-
-Sans `-rpc`, Go propose les signatures et réservations sans transfert. Sans `-deployment`, seule la cotation indicative fonctionne. Il n'y a pas de `.env` lu automatiquement. Go accepte aussi `-listen` et `-engine` ; Rust accepte `ENGINE_ADDR` pour les tests sur d'autres ports.
-
-## Arrêt et réinitialisation
-
-Ctrl+C arrête chaque serveur. Vite recharge le frontend ; Go/Rust doivent être relancés après modification. Une perte d'état Go ou Rust exige un **reset coordonné** : arrêter les services et Anvil, recréer une chaîne vierge, redéployer et relancer. Ne pas conserver la chaîne avec un inventaire Rust remis à son état initial. Si l'interface suit un ancien trade, fermer son onglet puis en ouvrir un nouveau (suivi dans `sessionStorage`). Voir [pourquoi la persistance manque](architecture.md#persistance-et-reprise).
-
-## Vérifications reproductibles
-
-Commande recommandée depuis la racine :
-
-```powershell
+.\scripts\install-postgres.ps1
 .\scripts\verify.ps1
 ```
 
-Versions exactes : scripts/toolchains.json. Le script ne fait aucune installation globale. Il contrôle formatage, tests, analyses et builds puis exécute les intégrations Signatures et Settlement via Vite. L'option -SkipIntegration ne valide qu'une suite partielle.
+This runs tests, formatting and static checks, builds, and real-process tests for signatures, settlement and recovery. It also runs a small load campaign to check correctness. `-SkipIntegration` skips the real-process and load checks. GitHub Actions runs the full suite on Windows and Go race tests on Linux.
 
-Rapports : .cache/verification/<exécution>/summary.json et verify.log. Logs et manifestes isolés : .cache/integration/. Ports de test : 15173, 18080, 18081, 18545. Les tests refusent les ports occupés, arrêtent leurs seuls processus et ne remplacent pas le manifeste de démo.
+| Task | Entry point |
+|---|---|
+| Start a fresh interactive market | `scripts/demo.ps1` |
+| Install PostgreSQL and manage its dedicated cluster | `scripts/install-postgres.ps1` and `scripts/postgres.ps1` |
+| Run the persistent chain and application | `scripts/local-chain.ps1` and `scripts/start.ps1` |
+| Run the same checks as Windows CI | `scripts/verify.ps1`, which invokes `test-integration.ps1` and `test-recovery.ps1` |
+| Reproduce load measurements | [Benchmark commands](../loadgen/README.md) |
 
-Le workflow GitHub prépare Windows 2022 avec les mêmes versions et un job Ubuntu 24.04 limité au race detector Go. Actions épinglées par SHA, permissions en lecture seule, aucun secret applicatif. Les installations globales du workflow concernent uniquement le runner jetable. L'exécution GitHub reste à valider après push autorisé.
+Verification reports are written to `.cache/verification/<run>/`. The integration and benchmark runners use their own ports and state directories.
 
-### Commandes individuelles
+## Troubleshooting
 
-Exécuter chaque bloc depuis la racine et vérifier le succès des commandes avant de poursuivre.
-
-```powershell
-Push-Location market-engine
-cargo fmt --check
-cargo test --locked --all-targets --target-dir ../.cache/stage1-rust
-cargo clippy --locked --all-targets --target-dir ../.cache/stage1-rust -- -D warnings
-cargo build --locked --target-dir ../.cache/stage1-rust
-Pop-Location
-
-Push-Location backend
-gofmt -l cmd internal
-go test ./...
-go vet ./...
-go build -o ../.cache/settlement-api.exe ./cmd/rfq-dvp-market-api
-Pop-Location
-
-Push-Location contracts
-forge fmt --check
-forge test -vv
-forge build
-Pop-Location
-
-Push-Location web
-npm test
-npm run build
-Pop-Location
-
-./scripts/test-app-settlement.ps1
-```
-
-`gofmt -l` ne doit rien afficher. Le répertoire Rust distinct évite de remplacer l'exécutable d'un serveur ouvert sous Windows. Le test applicatif utilise un wallet logiciel ethers, une chaîne temporaire 18545 et Go/Rust 18080/18081. Il teste les quatre modes, soldes exacts, receipts, retries, nonces et échec d'allowance. Il arrête ses processus et restaure le JSON de déploiement précédent ; il ne pilote pas MetaMask.
-
-### Tests ciblés facultatifs
-
-- Domaine sans serveur : depuis `market-engine`, `cargo run --locked --example quotes`.
-- Contrats seuls : depuis la racine, `./scripts/test-settlement.ps1`. Port 18545 libre ; ce script écrit un JSON de déploiement pour une chaîne ensuite arrêtée. Redéployer avant une session interactive. Ne pas lancer `SettleLocal.s.sol` sur la session applicative pour modifier les inventaires hors Rust.
-- Cotation via Vite : compiler Go en `.cache/quotes-api.exe` (`go build -o ../.cache/quotes-api.exe ./cmd/rfq-dvp-market-api` depuis `backend`), puis `./scripts/test-quotes.ps1` depuis la racine.
-- Signatures seules : compiler Go en `.cache/signatures-api.exe` de la même manière, puis `./scripts/test-signatures.ps1`. Contrats fictifs, aucun transfert Anvil.
-
-Les deux derniers scripts exigent le build Rust `.cache/stage1-rust`, le build web et les ports 8080/8081/5173 libres ; le test de signatures exige aussi `npm test` pour produire les modules TypeScript utilisés. Les scripts ne stoppent pas les services préexistants. Les résultats historiques sont dans [progress.md](progress.md).
-
-## Erreurs courantes
-
-- **Quote expirée** : demander une nouvelle RFQ ; reconnecter le wallet ne prolonge pas ses termes.
-- **Signatures ou settlement désactivés** : vérifier les flags `-deployment` et `-rpc` de Go.
-- **Contrat absent / mauvaise paire** : vérifier que le JSON correspond au déploiement de la chaîne actuellement ouverte.
-- **Simulation refusée** : vérifier le compte trader index 1, ses soldes et allowances. Les réservations restent conservatrices jusqu'à résolution ; ne pas les effacer sur un simple timeout.
-- **Port occupé** : arrêter le service concerné ou choisir les ports de test. Aucun changement silencieux de port.
-- **Erreur linker Rust sous Windows** : vérifier les Build Tools C++ et le SDK, pas seulement rustup.
+- **Startup reports a busy port.** Stop the existing process before retrying. The interactive setup uses 5173 for the UI, 8080 for Go, 8081 for Rust, 8545 for Anvil and 55432 for PostgreSQL.
+- **MetaMask shows no funded balance.** Check the address and chain ID above, then confirm the chain is running. Start a new quote after switching networks.
+- **Persistent startup reports a readiness error.** Read [the readiness response](http://127.0.0.1:8080/api/readiness) and application logs under `.cache/start/`. After a database outage, restore PostgreSQL before restarting the application. Inventory mismatches require checking that the chain and database belong to the same market.
